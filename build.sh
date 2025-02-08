@@ -79,7 +79,13 @@ repo init -u https://github.com/crdroidandroid/android.git -b 15.0 --git-lfs --d
 git clone https://github.com/jayz1212/local.git --depth 1 -b main .repo/local_manifests
 /opt/crave/resync.sh 
 source build/envsetup.sh 
-#brunch vayu
+
+echo $RBE_DIR
+echo $RBE_DIR
+echo $RBE_DIR
+echo $RBE_DIR
+echo $RBE_DIR
+brunch vayu
 
 
 
