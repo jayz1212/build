@@ -4,6 +4,7 @@ rm -rf device/xiaomi
 rm -rf vendor/xiaomi
 rm -rf vendor/lineage-priv
 rm -rf kernel/xiaomi
+rm -rf frameworks/base
 repo init -u https://github.com/Evolution-X/manifest -b vic --git-lfs
 git clone https://github.com/vayu-development-sources/local_manifests.git -b evo15-dolby .repo/local_manifests
 /opt/crave/resync.sh
