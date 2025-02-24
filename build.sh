@@ -14,4 +14,19 @@ cd frameworks/base/
 git fetch https://github.com/xc112lg/android_frameworks_base.git patch-2
 git cherry-pick 3a3b3718ffcfe53127cbfa228577f02d825e1960
 cd -
+cd device/xiaomi/vayu
+git fetch https://github.com/jayz1212/device_xiaomi_vayu.git patch-1
+git cherry-pick eabc02b7c8c3d6669646770ceab08c37df3c5c9a
+cd -
+
 . build/envsetup.sh && lunch lineage_vayu-ap4a-user && m evolution
+
+
+rm -rf Evolution-X
+git clone https://$GH_TOKEN@github.com/xc112lg/Evolution-X.git
+rm Evolution-X/*.zip
+
+cp -r out/target/product/*/*.zip out/target/product/*/recovery.img Evolution-X/
+cd Evolution-X/
+chmod +x multi_upload.sh
+. multi_upload.sh
