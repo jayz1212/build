@@ -26,84 +26,76 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 sed -i 's|PRODUCT_AAPT_CONFIG := normal hdpi xhdpi|PRODUCT_AAPT_CONFIG ?= normal hdpi xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
 sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
 . build/envsetup.sh
-
-#!/bin/bash
-
 set -e
 
-RIL_DIR="hardware/samsung/ril/libril/include/telephony"
-AOSP_RIL="hardware/ril/include/telephony/ril.h"
+echo "[*] Disabling RIL completely..."
 
-echo "[*] Applying Samsung RIL patch..."
+DEVICE_DIR="device/samsung/a5ltechn"
+COMMON_DIR="device/samsung/msm8916-common"
 
-# ✅ 1. Create ril_vendor.h
-mkdir -p "$RIL_DIR"
+# -----------------------------
+# 1. Remove libril from device.mk
+# -----------------------------
+for FILE in $(find $DEVICE_DIR $COMMON_DIR -name "device.mk" 2>/dev/null); do
+    echo "[*] Processing $FILE"
 
-cat > "$RIL_DIR/ril_vendor.h" <<'EOF'
-#ifndef RIL_VENDOR_H
-#define RIL_VENDOR_H
+    sed -i '/libril/d' "$FILE"
+    sed -i '/librilutils/d' "$FILE"
+done
 
-/* Samsung RIL v3 vendor extensions (MSM8916 era) */
+echo "[+] Removed libril from PRODUCT_PACKAGES"
 
-#define RIL_REQUEST_GET_BARCODE_NUMBER                11000
-#define RIL_REQUEST_UICC_GBA_AUTHENTICATE_BOOTSTRAP   11001
-#define RIL_REQUEST_UICC_GBA_AUTHENTICATE_NAF         11002
-#define RIL_REQUEST_SIM_TRANSMIT_BASIC                11003
-#define RIL_REQUEST_SIM_TRANSMIT_CHANNEL              11004
-#define RIL_REQUEST_SIM_AUTH                          11005
-#define RIL_REQUEST_PS_ATTACH                         11006
-#define RIL_REQUEST_PS_DETACH                         11007
-#define RIL_REQUEST_ACTIVATE_DATA_CALL                11008
-#define RIL_REQUEST_CHANGE_SIM_PERSO                  11009
-#define RIL_REQUEST_ENTER_SIM_PERSO                   11010
-#define RIL_REQUEST_GET_TIME_INFO                     11011
-#define RIL_REQUEST_OMADM_SETUP_SESSION               11012
-#define RIL_REQUEST_OMADM_SERVER_START_SESSION        11013
-#define RIL_REQUEST_OMADM_CLIENT_START_SESSION        11014
-#define RIL_REQUEST_OMADM_SEND_DATA                   11015
-#define RIL_REQUEST_CDMA_GET_DATAPROFILE              11016
-#define RIL_REQUEST_CDMA_SET_DATAPROFILE              11017
-#define RIL_REQUEST_CDMA_GET_SYSTEMPROPERTIES         11018
-
-#endif // RIL_VENDOR_H
-EOF
-
-echo "[+] ril_vendor.h created"
-
-# ✅ 2. Patch ril_commands_vendor.h
-RCV="$RIL_DIR/ril_commands_vendor.h"
-
-if ! grep -q 'ril_vendor.h' "$RCV"; then
-    sed -i '1i #include "ril_vendor.h"' "$RCV"
-    echo "[+] ril_commands_vendor.h patched"
-else
-    echo "[=] ril_commands_vendor.h already patched"
-fi
-
-# ✅ 3. Patch AOSP ril.h (safe inject)
-if [ -f "$AOSP_RIL" ]; then
-    if ! grep -q 'ril_vendor.h' "$AOSP_RIL"; then
-        sed -i '/#include <telephony\/ril.h>/a #include "ril_vendor.h"' "$AOSP_RIL" || true
-        sed -i '1i #include "ril_vendor.h"' "$AOSP_RIL"
-        echo "[+] ril.h patched"
-    else
-        echo "[=] ril.h already patched"
+# -----------------------------
+# 2. Add ro.radio.noril=true
+# -----------------------------
+for FILE in $(find $DEVICE_DIR $COMMON_DIR -name "device.mk" 2>/dev/null); do
+    if ! grep -q "ro.radio.noril=true" "$FILE"; then
+        echo "" >> "$FILE"
+        echo "# Disable RIL" >> "$FILE"
+        echo "PRODUCT_PROPERTY_OVERRIDES += ro.radio.noril=true" >> "$FILE"
+        echo "[+] Added ro.radio.noril=true to $FILE"
     fi
-fi
+done
 
-# ✅ 4. Fix include priority (Android.mk)
-MK_FILE="hardware/samsung/ril/libril/Android.mk"
+# -----------------------------
+# 3. Disable ril-daemon in init.rc
+# -----------------------------
+for FILE in $(find $DEVICE_DIR $COMMON_DIR -name "init*.rc" 2>/dev/null); do
+    echo "[*] Patching $FILE"
 
-if [ -f "$MK_FILE" ]; then
-    if ! grep -q 'include/telephony' "$MK_FILE"; then
-        sed -i '/LOCAL_C_INCLUDES +=/a \ \ \ \ $(LOCAL_PATH)/include/telephony \\' "$MK_FILE"
-        echo "[+] Android.mk include path fixed"
-    else
-        echo "[=] Android.mk already contains include fix"
-    fi
-fi
+    sed -i 's/^service ril-daemon/# service ril-daemon/g' "$FILE"
+    sed -i 's/^service ril-daemon1/# service ril-daemon1/g' "$FILE"
+done
 
-echo "[✔] Samsung RIL patch applied successfully!"
+echo "[+] Disabled ril-daemon services"
+
+# -----------------------------
+# 4. Remove rild.libpath props
+# -----------------------------
+for FILE in $(find $DEVICE_DIR $COMMON_DIR -name "*.prop" 2>/dev/null); do
+    sed -i '/rild.libpath/d' "$FILE"
+    sed -i '/rild.libpath2/d' "$FILE"
+done
+
+echo "[+] Removed rild.libpath properties"
+
+# -----------------------------
+# 5. Optional: remove telephony apps
+# -----------------------------
+for FILE in $(find $DEVICE_DIR $COMMON_DIR -name "device.mk" 2>/dev/null); do
+    sed -i '/TeleService/d' "$FILE"
+    sed -i '/Stk/d' "$FILE"
+done
+
+echo "[+] Removed Telephony apps"
+
+# -----------------------------
+# DONE
+# -----------------------------
+echo "[✔] RIL fully disabled!"
+echo ""
+echo "👉 Now run:"
+echo "make clean && make -j\$(nproc)"
 
 
 
