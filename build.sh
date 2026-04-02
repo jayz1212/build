@@ -26,7 +26,8 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 sed -i 's|PRODUCT_AAPT_CONFIG := normal hdpi xhdpi|PRODUCT_AAPT_CONFIG ?= normal hdpi xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
 sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
 . build/envsetup.sh
-brunch a5ltechn 2>&1 | tee build.log && echo "Build finished. Uploading log..." && curl --upload-file build.log https://temp.sh || (echo "Build failed. Uploading error log..." && curl --upload-file build.log https://temp.sh)
+brunch a5ltechn 2>&1 | tee build.log
 
-
+# Upload to ix.io
+cat build.log | curl -F 'f:1=<-' ix.io
 
