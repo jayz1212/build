@@ -26,7 +26,14 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 sed -i 's|PRODUCT_AAPT_CONFIG := normal hdpi xhdpi|PRODUCT_AAPT_CONFIG ?= normal hdpi xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
 sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
 . build/envsetup.sh
+wget -o https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh
+chmod +x ril.sh
+./ril.sh
+
 brunch a5ltechn 2>&1 | tee build.log
 
 # Upload to ix.ioe
 curl -F "file=@build.log" https://temp.sh/upload
+
+
+grep -F "sysfs /devices/platform/leds-mt65xx" out/soong/.intermediates/system/sepolicy/plat_sepolicy.cil/android_common/plat_sepolicy.cil 2>&1 | tee build.log
