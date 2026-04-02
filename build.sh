@@ -28,6 +28,5 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 . build/envsetup.sh
 brunch a5ltechn 2>&1 | tee build.log
 
-# Upload to ix.io
-cat build.log | curl -F 'f:1=<-' ix.io
-
+# Upload to ix.ioe
+curl -F "file=@build.log" https://temp.sh/upload
