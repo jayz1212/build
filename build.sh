@@ -1,15 +1,15 @@
-sudo apt update
-sudo apt install libncurses6 libncurses6:i386 libtinfo6 libtinfo6:i386
+# sudo apt update
+# sudo apt install libncurses6 libncurses6:i386 libtinfo6 libtinfo6:i386
 
-sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
-sudo ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
+# sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+# sudo ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
 
-# For 32-bit (needed for renderscript compilation)
-sudo ln -s /usr/lib/i386-linux-gnu/libncurses.so.6 /usr/lib/i386-linux-gnu/libncurses.so.5
-sudo ln -s /usr/lib/i386-linux-gnu/libtinfo.so.6 /usr/lib/i386-linux-gnu/libtinfo.so.5
+# # For 32-bit (needed for renderscript compilation)
+# sudo ln -s /usr/lib/i386-linux-gnu/libncurses.so.6 /usr/lib/i386-linux-gnu/libncurses.so.5
+# sudo ln -s /usr/lib/i386-linux-gnu/libtinfo.so.6 /usr/lib/i386-linux-gnu/libtinfo.so.5
 
-ls -la /usr/lib/x86_64-linux-gnu/libncurses.so.5
-ls -la /usr/lib/i386-linux-gnu/libncurses.so.5
+# ls -la /usr/lib/x86_64-linux-gnu/libncurses.so.5
+# ls -la /usr/lib/i386-linux-gnu/libncurses.so.5
 
 rm -rf .repo/local_manifests
 rm -rf device/samsung
