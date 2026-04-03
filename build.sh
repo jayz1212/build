@@ -67,7 +67,7 @@ fi
 echo "[✓] Done fixing ril_vendor.h include!"
 
 
-
+make installclean
 brunch a5ltechn 2>&1 | tee build.log
 
 # Upload to ix.ioe
