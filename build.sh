@@ -66,7 +66,7 @@ fi
 
 echo "[✓] Done fixing ril_vendor.h include!"
 
-
+curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 
 
 make installclean
