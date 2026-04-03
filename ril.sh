@@ -46,14 +46,41 @@ set_c_include_mk() {
     escaped=$(echo "$path" | sed 's|/|\\/|g')
     # Remove ALL existing lines that contain this path (handles duplicates)
     sed -i "/LOCAL_C_INCLUDES.*${escaped}/d" "$file"
-    # Now add exactly one line
+    # Now add exactly one line using Python for reliable multi-context insert
     if grep -q "LOCAL_C_INCLUDES" "$file"; then
         # Insert after the first LOCAL_C_INCLUDES line
-        sed -i "0,/LOCAL_C_INCLUDES/{ /LOCAL_C_INCLUDES/a LOCAL_C_INCLUDES += $path
-}" "$file"
+        python3 - "$file" "LOCAL_C_INCLUDES" "after" "LOCAL_C_INCLUDES += $path" <<'PYEOF'
+import sys
+filepath, anchor, mode, newline = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+with open(filepath) as f:
+    lines = f.readlines()
+inserted = False
+out = []
+for line in lines:
+    out.append(line)
+    if not inserted and anchor in line:
+        out.append(newline + '\n')
+        inserted = True
+with open(filepath, 'w') as f:
+    f.writelines(out)
+PYEOF
     else
-        sed -i "0,/LOCAL_SRC_FILES/{ /LOCAL_SRC_FILES/i LOCAL_C_INCLUDES += $path
-}" "$file"
+        # Insert before the first LOCAL_SRC_FILES line
+        python3 - "$file" "LOCAL_SRC_FILES" "before" "LOCAL_C_INCLUDES += $path" <<'PYEOF'
+import sys
+filepath, anchor, mode, newline = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+with open(filepath) as f:
+    lines = f.readlines()
+inserted = False
+out = []
+for line in lines:
+    if not inserted and anchor in line:
+        out.append(newline + '\n')
+        inserted = True
+    out.append(line)
+with open(filepath, 'w') as f:
+    f.writelines(out)
+PYEOF
     fi
     success "Set (exactly once) in $file: LOCAL_C_INCLUDES += $path"
 }
@@ -198,8 +225,29 @@ else
     # Append the missing definitions before the final #endif of the header guard
     # (or at end of file if no header guard)
     if grep -q "^#endif" "$DEFS_H"; then
-        # Insert before the last #endif
-        sed -i "$(grep -n "^#endif" "$DEFS_H" | tail -1 | cut -d: -f1)i $(echo -e "$BLOCK")" "$DEFS_H"
+        # Insert before the last #endif using Python — sed can't reliably insert
+        # multi-line blocks and chokes on newlines in the replacement string.
+        python3 - "$DEFS_H" "$BLOCK" <<'PYEOF'
+import sys
+filepath = sys.argv[1]
+block = sys.argv[2]
+# Unescape \n sequences that bash embedded literally
+block = block.replace('\\n', '\n')
+with open(filepath) as f:
+    lines = f.readlines()
+# Find the last line that is exactly '#endif'
+last_endif = None
+for i, line in enumerate(lines):
+    if line.strip() == '#endif':
+        last_endif = i
+if last_endif is None:
+    # Shouldn't happen given the grep check, but append safely
+    lines.append(block)
+else:
+    lines.insert(last_endif, block + '\n')
+with open(filepath, 'w') as f:
+    f.writelines(lines)
+PYEOF
     else
         printf "\n%b" "$BLOCK" >> "$DEFS_H"
     fi
