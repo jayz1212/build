@@ -1,78 +1,46 @@
 bash -c '
 echo "====================================="
-echo "[*] HARD RIL STRIP (ULTIMATE FIX)"
+echo "[*] FINAL RIL REMOVAL (AOSP + SAMSUNG)"
 echo "====================================="
 
-DEVICE_DIR=$(find device -type d -name "*a5ltechn*" | head -n 1)
-[ -z "$DEVICE_DIR" ] && echo "[!] Device tree not found" && exit 1
-
-echo "[*] Device: $DEVICE_DIR"
-
 # -----------------------------------
-# 1. BoardConfig
+# 1. Remove hardware/ril entirely
 # -----------------------------------
-BC="$DEVICE_DIR/BoardConfig.mk"
-[ -f "$BC" ] && {
-  echo "[*] Patching BoardConfig"
-  grep -q "TARGET_NO_TELEPHONY" "$BC" || echo "TARGET_NO_TELEPHONY := true" >> "$BC"
-  grep -q "TARGET_NO_RADIOIMAGE" "$BC" || echo "TARGET_NO_RADIOIMAGE := true" >> "$BC"
-  grep -q "BOARD_PROVIDES_LIBRIL" "$BC" || echo "BOARD_PROVIDES_LIBRIL := true" >> "$BC"
-}
-
-# -----------------------------------
-# 2. device.mk
-# -----------------------------------
-DMK="$DEVICE_DIR/device.mk"
-[ -f "$DMK" ] && {
-  echo "[*] Cleaning device.mk"
-
-  sed -i "/ril/d" "$DMK"
-
-  grep -q "ro.radio.noril" "$DMK" || cat >> "$DMK" <<EOF
-
-PRODUCT_PROPERTY_OVERRIDES += \\
-    ro.radio.noril=true \\
-    persist.radio.multisim.config=none \\
-    ro.telephony.default_network=0
-
-PRODUCT_PACKAGES += \\
-    TelephonyProviderStub
-EOF
-}
-
-# -----------------------------------
-# 3. Remove Samsung RIL completely
-# -----------------------------------
-if [ -d "hardware/samsung/ril" ]; then
-  echo "[*] Removing Samsung RIL folder completely"
-  rm -rf hardware/samsung/ril
+if [ -d "hardware/ril" ]; then
+  echo "[*] Removing AOSP RIL (hardware/ril)"
+  mv hardware/ril hardware/ril.disabled 2>/dev/null
 fi
 
 # -----------------------------------
-# 4. HARD PATCH Android.mk
+# 2. Patch root Android.mk if needed
 # -----------------------------------
-SMK="hardware/samsung/Android.mk"
-if [ -f "$SMK" ]; then
-  echo "[*] HARD patching Android.mk"
+ROOTMK="hardware/Android.mk"
+if [ -f "$ROOTMK" ]; then
+  echo "[*] Patching hardware/Android.mk"
 
-  cp "$SMK" "$SMK.bak"
+  cp "$ROOTMK" "$ROOTMK.bak"
 
-  # REMOVE any direct ril includes
-  sed -i "/ril/d" "$SMK"
-
-  # Replace generic include safely
-  sed -i "s|include.*all-subdir-makefiles.*|subdirs := \$(filter-out ril, \$(call all-named-subdir-makefiles))\ninclude \$(subdirs)|g" "$SMK"
+  sed -i "/ril/d" "$ROOTMK"
 fi
 
 # -----------------------------------
-# 5. Clean intermediates
+# 3. Clean any leftover references
 # -----------------------------------
-echo "[*] Cleaning build artifacts"
+echo "[*] Removing any leftover RIL references in build system"
+grep -rl "reference-ril" . | xargs -r sed -i "/reference-ril/d"
+grep -rl "rild" . | xargs -r sed -i "/rild/d"
+grep -rl "libril" . | xargs -r sed -i "/libril/d"
+
+# -----------------------------------
+# 4. Clean build artifacts
+# -----------------------------------
+echo "[*] Cleaning old outputs"
 rm -rf out/target/product/*/obj/SHARED_LIBRARIES/*ril*
+rm -rf out/target/product/*/obj/EXECUTABLES/rild*
 
 echo ""
-echo "[✓] RIL FULLY NUKED"
-echo "Now run:"
+echo "[✓] ALL RIL (Samsung + AOSP) REMOVED"
+echo "Now rebuild:"
 echo "  mka installclean"
 echo "  mka bacon"
 '
