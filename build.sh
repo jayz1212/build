@@ -68,7 +68,7 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 
 #curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 
-curl -sf https://raw.githubusercontent.com/jayz1212/build/9a6c2c28a90826fd37f5653d4839ebda946fd606/ril.sh | bash
+curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 make installclean
 brunch a5ltechn 2>&1 | tee build.log
 
