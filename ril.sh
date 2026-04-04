@@ -1,35 +1,37 @@
 bash -c '
 echo "====================================="
-echo "[*] FINAL RIL REMOVAL (AOSP + SAMSUNG)"
+echo "[*] FINAL RIL REMOVAL (FAST & SAFE)"
 echo "====================================="
 
 # -----------------------------------
-# 1. Remove hardware/ril entirely
+# 1. Disable AOSP RIL safely
 # -----------------------------------
 if [ -d "hardware/ril" ]; then
-  echo "[*] Removing AOSP RIL (hardware/ril)"
+  echo "[*] Disabling hardware/ril"
   mv hardware/ril hardware/ril.disabled 2>/dev/null
 fi
 
 # -----------------------------------
-# 2. Patch root Android.mk if needed
+# 2. Patch hardware root makefile
 # -----------------------------------
 ROOTMK="hardware/Android.mk"
 if [ -f "$ROOTMK" ]; then
   echo "[*] Patching hardware/Android.mk"
-
   cp "$ROOTMK" "$ROOTMK.bak"
-
   sed -i "/ril/d" "$ROOTMK"
 fi
 
 # -----------------------------------
-# 3. Clean any leftover references
+# 3. Device tree cleanup ONLY (fast)
 # -----------------------------------
-echo "[*] Removing any leftover RIL references in build system"
-grep -rl "reference-ril" . | xargs -r sed -i "/reference-ril/d"
-grep -rl "rild" . | xargs -r sed -i "/rild/d"
-grep -rl "libril" . | xargs -r sed -i "/libril/d"
+DEVICE_DIR=$(find device -type d -name "*a5ltechn*" | head -n 1)
+
+if [ -n "$DEVICE_DIR" ]; then
+  echo "[*] Cleaning device tree refs"
+
+  sed -i "/ril/d" "$DEVICE_DIR/device.mk" 2>/dev/null
+  sed -i "/ril/d" "$DEVICE_DIR/BoardConfig.mk" 2>/dev/null
+fi
 
 # -----------------------------------
 # 4. Clean build artifacts
@@ -39,8 +41,8 @@ rm -rf out/target/product/*/obj/SHARED_LIBRARIES/*ril*
 rm -rf out/target/product/*/obj/EXECUTABLES/rild*
 
 echo ""
-echo "[✓] ALL RIL (Samsung + AOSP) REMOVED"
-echo "Now rebuild:"
+echo "[✓] RIL fully disabled (safe mode)"
+echo "Now run:"
 echo "  mka installclean"
 echo "  mka bacon"
 '
