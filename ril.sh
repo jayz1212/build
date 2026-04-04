@@ -8,7 +8,7 @@ cd -
 
 
 cd device/samsung/a5-common
-git fetch https://github.com/jayz1212jayz1212/android_device_samsung_a5-common.git patch-1
+git fetch https://github.com/jayz1212/android_device_samsung_a5-common.git patch-1
 git cherry-pick e3427a6ba3592cd201efdf8f5359da9d9caa51fd
 cd - 
 
