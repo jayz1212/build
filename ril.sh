@@ -88,11 +88,11 @@ QBTMK="vendor/qcom/opensource/commonsys/packages/apps/Bluetooth/Android.mk"
 # -----------------------------------
 # 6. CLEAN BUILD SYSTEM
 # -----------------------------------
-echo "[*] Cleaning build cache..."
+# echo "[*] Cleaning build cache..."
 
-rm -rf out/soong
-rm -rf out/target/product/*/obj/SHARED_LIBRARIES/*ril*
-rm -rf out/target/product/*/obj/EXECUTABLES/rild*
+# rm -rf out/soong
+# rm -rf out/target/product/*/obj/SHARED_LIBRARIES/*ril*
+# rm -rf out/target/product/*/obj/EXECUTABLES/rild*
 
 # -----------------------------------
 # DONE
