@@ -1,6 +1,6 @@
 bash -c '
 echo "====================================="
-echo "[*] COMPLETE WIFI-ONLY PATCH (FINAL)"
+echo "[*] COMPLETE WIFI-ONLY BUILD PATCH"
 echo "====================================="
 
 # -----------------------------------
@@ -16,7 +16,7 @@ fi
 echo "[*] Device: $DEVICE_DIR"
 
 # -----------------------------------
-# 1. REMOVE ALL RIL (no rename!)
+# 1. REMOVE ALL RIL (NO RENAME)
 # -----------------------------------
 echo "[*] Removing all RIL sources..."
 
@@ -26,26 +26,22 @@ rm -rf hardware/samsung/ril
 rm -rf hardware/samsung/ril.disabled
 
 # -----------------------------------
-# 2. Patch hardware/samsung/Android.mk
+# 2. PATCH Samsung Android.mk
 # -----------------------------------
 SMK="hardware/samsung/Android.mk"
 
 if [ -f "$SMK" ]; then
-  echo "[*] Patching Samsung Android.mk"
-
+  echo "[*] Fixing Samsung Android.mk"
   cp "$SMK" "$SMK.bak"
 
-  # Remove ANY ril references
   sed -i "/ril/d" "$SMK"
-
-  # Fix subdir include if present
   sed -i "s|include.*all-subdir-makefiles.*|subdirs := \$(filter-out ril, \$(call all-named-subdir-makefiles))\ninclude \$(subdirs)|g" "$SMK"
 fi
 
 # -----------------------------------
-# 3. Device tree cleanup (SAFE)
+# 3. CLEAN DEVICE TREE
 # -----------------------------------
-echo "[*] Cleaning device tree references..."
+echo "[*] Cleaning device tree..."
 
 sed -i "/libril/d" "$DEVICE_DIR/device.mk" 2>/dev/null
 sed -i "/rild/d" "$DEVICE_DIR/device.mk" 2>/dev/null
@@ -55,9 +51,9 @@ sed -i "/libril/d" "$DEVICE_DIR/BoardConfig.mk" 2>/dev/null
 sed -i "/rild/d" "$DEVICE_DIR/BoardConfig.mk" 2>/dev/null
 
 # -----------------------------------
-# 4. Add WiFi-only config
+# 4. ADD WIFI-ONLY CONFIG
 # -----------------------------------
-echo "[*] Adding WiFi-only configuration..."
+echo "[*] Adding WiFi-only config..."
 
 grep -q "ro.radio.noril" "$DEVICE_DIR/device.mk" || cat >> "$DEVICE_DIR/device.mk" <<EOF
 
@@ -67,23 +63,32 @@ PRODUCT_PROPERTY_OVERRIDES += \\
     persist.radio.multisim.config=none \\
     ro.telephony.default_network=0
 
-# Prevent telephony crashes
 PRODUCT_PACKAGES += \\
     TelephonyProviderStub
 EOF
 
 grep -q "TARGET_NO_TELEPHONY" "$DEVICE_DIR/BoardConfig.mk" || cat >> "$DEVICE_DIR/BoardConfig.mk" <<EOF
 
-# Disable telephony
 TARGET_NO_TELEPHONY := true
 TARGET_NO_RADIOIMAGE := true
 BOARD_PROVIDES_LIBRIL := true
 EOF
 
 # -----------------------------------
-# 5. Clean build system (IMPORTANT)
+# 5. FIX BLUETOOTH SAP (NEW)
 # -----------------------------------
-echo "[*] Cleaning build caches..."
+echo "[*] Fixing Bluetooth SAP dependency..."
+
+BTMK="packages/apps/Bluetooth/Android.mk"
+[ -f "$BTMK" ] && sed -i "/sap-api-java-static/d" "$BTMK"
+
+QBTMK="vendor/qcom/opensource/commonsys/packages/apps/Bluetooth/Android.mk"
+[ -f "$QBTMK" ] && sed -i "/sap-api-java-static/d" "$QBTMK"
+
+# -----------------------------------
+# 6. CLEAN BUILD SYSTEM
+# -----------------------------------
+echo "[*] Cleaning build cache..."
 
 rm -rf out/soong
 rm -rf out/target/product/*/obj/SHARED_LIBRARIES/*ril*
@@ -93,9 +98,9 @@ rm -rf out/target/product/*/obj/EXECUTABLES/rild*
 # DONE
 # -----------------------------------
 echo ""
-echo "[✓] SUCCESS: FULL WIFI-ONLY BUILD READY"
+echo "[✓] ALL FIXES APPLIED SUCCESSFULLY"
 echo ""
-echo "Next commands:"
+echo "Next steps:"
 echo "  mka installclean"
 echo "  mka bacon"
 '
