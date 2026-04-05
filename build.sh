@@ -176,10 +176,10 @@ export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
 export SUBARCH=arm
 export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
 
-# Disable stack protector
-scripts/config --disable CC_STACKPROTECTOR
-scripts/config --disable CC_STACKPROTECTOR_STRONG
-scripts/config --disable CC_STACKPROTECTOR_REGULAR
+# # Disable stack protector
+# scripts/config --disable CC_STACKPROTECTOR
+# scripts/config --disable CC_STACKPROTECTOR_STRONG
+# scripts/config --disable CC_STACKPROTECTOR_REGULAR
 
 
 brunch a5ltechn 2>&1 | tee build.log
