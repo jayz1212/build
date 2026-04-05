@@ -1,5 +1,4 @@
-sudo rm -rf /etc/pacman.d/gnupg
-sudo pacman-key --init
+
 
 #!/usr/bin/env bash
 set -e
