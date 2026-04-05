@@ -79,26 +79,26 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 #curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
-export ARCH=arm
-export CC=clang
-export LD=ld.lld
-export AR=llvm-ar
-export NM=llvm-nm
-export STRIP=llvm-strip
-export OBJCOPY=llvm-objcopy
-export OBJDUMP=llvm-objdump
-export READELF=llvm-readelf
-export HOSTCC=clang
-export HOSTCXX=clang++
-export CLANG_TRIPLE=arm-linux-gnueabi-
-export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
-export SUBARCH=arm
-export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
+# export ARCH=arm
+# export CC=clang
+# export LD=ld.lld
+# export AR=llvm-ar
+# export NM=llvm-nm
+# export STRIP=llvm-strip
+# export OBJCOPY=llvm-objcopy
+# export OBJDUMP=llvm-objdump
+# export READELF=llvm-readelf
+# export HOSTCC=clang
+# export HOSTCXX=clang++
+# export CLANG_TRIPLE=arm-linux-gnueabi-
+# export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
+# export SUBARCH=arm
+# export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
 
 
-# 1. Force correct Java (VERY IMPORTANT)
-export JAVA_HOME=$(pwd)/prebuilts/jdk/jdk11/linux-x86
-export PATH=$JAVA_HOME/bin:$PATH
+# # 1. Force correct Java (VERY IMPORTANT)
+# export JAVA_HOME=$(pwd)/prebuilts/jdk/jdk11/linux-x86
+# export PATH=$JAVA_HOME/bin:$PATH
 
 # 2. Clean only the broken module
 rm -rf out/soong/.intermediates/libcore
