@@ -69,7 +69,22 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 #curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
-make clean
+export ARCH=arm
+export CROSS_COMPILE=arm-linux-androideabi-
+export CC=clang
+export LD=ld.lld
+export AR=llvm-ar
+export NM=llvm-nm
+export STRIP=llvm-strip
+export OBJCOPY=llvm-objcopy
+export OBJDUMP=llvm-objdump
+export READELF=llvm-readelf
+export HOSTCC=clang
+export HOSTCXX=clang++
+export CLANG_TRIPLE=arm-linux-gnueabi-
+
+# Then run your make command
+make O=out/target/product/a5ltechn/obj/KERNEL_OBJ zImage
 brunch a5ltechn 2>&1 | tee build.log
 
 # Upload to ix.ioe
