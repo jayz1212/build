@@ -180,7 +180,7 @@ export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-andr
 # scripts/config --disable CC_STACKPROTECTOR_STRONG
 # scripts/config --disable CC_STACKPROTECTOR_REGULAR
 
-
+. build/envsetup.sh
 brunch a5ltechn 2>&1 | tee build.log
 
 # Upload to ix.ioe
