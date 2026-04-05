@@ -3,72 +3,72 @@
 #!/usr/bin/env bash
 
 
-echo "🔥 FULL AUTO FIX STARTING..."
+# echo "🔥 FULL AUTO FIX STARTING..."
 
-# -------------------------------
+# # -------------------------------
 
-# 1. Fix pacman keyring (force clean)
+# # 1. Fix pacman keyring (force clean)
 
-# -------------------------------
+# # -------------------------------
 
-echo "🔑 Fixing pacman keys..."
-sudo rm -rf /etc/pacman.d/gnupg || true
-sudo pacman-key --init
-sudo pacman-key --populate archlinux
+# echo "🔑 Fixing pacman keys..."
+# sudo rm -rf /etc/pacman.d/gnupg || true
+# sudo pacman-key --init
+# sudo pacman-key --populate archlinux
 
-# Update keyring first (critical)
+# # Update keyring first (critical)
 
-sudo pacman -Sy --noconfirm archlinux-keyring
+# sudo pacman -Sy --noconfirm archlinux-keyring
 
-# -------------------------------
+# # -------------------------------
 
-# 2. Fix mirrors (fast + reliable)
+# # 2. Fix mirrors (fast + reliable)
 
-# -------------------------------
+# # -------------------------------
 
-echo "🌐 Refreshing mirrors..."
-sudo pacman -S --noconfirm reflector
-sudo reflector --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+# echo "🌐 Refreshing mirrors..."
+# sudo pacman -S --noconfirm reflector
+# sudo reflector --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
 
-# -------------------------------
+# # -------------------------------
 
-# 3. Full system update
+# # 3. Full system update
 
-# -------------------------------
+# # -------------------------------
 
-echo "📦 Updating system..."
-sudo pacman -Syyu --noconfirm
+# echo "📦 Updating system..."
+# sudo pacman -Syyu --noconfirm
 
-# -------------------------------
+# # -------------------------------
 
-# 4. Install Java 8
+# # 4. Install Java 8
 
-# -------------------------------
+# # -------------------------------
 
-echo "☕ Installing Java 8..."
-sudo pacman -S --noconfirm jdk8-openjdk
+# echo "☕ Installing Java 8..."
+# sudo pacman -S --noconfirm jdk8-openjdk
 
-# -------------------------------
+# # -------------------------------
 
-# 5. Switch to Java 8
+# # 5. Switch to Java 8
 
-# -------------------------------
+# # -------------------------------
 
-echo "🔄 Switching to Java 8..."
-sudo archlinux-java set java-8-openjdk
+# echo "🔄 Switching to Java 8..."
+# sudo archlinux-java set java-8-openjdk
 
-# Verify
+# # Verify
 
-java -version
+# java -version
 
-# -------------------------------
+# # -------------------------------
 
-# 6. Export env (extra safety)
+# # 6. Export env (extra safety)
 
-# -------------------------------
+# # -------------------------------
 
-export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
-export PATH=$JAVA_HOME/bin:$PATH
+# export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
+# export PATH=$JAVA_HOME/bin:$PATH
 
 # -------------------------------
 
@@ -105,8 +105,8 @@ rm -rf .repo/local_manifests
 rm -rf device/samsung
 rm -rf vendor/samsung
 rm -rf kernel/samsung
-
-
+##https://github.com/accupara/los-cm14.1.git -b cm-14.1 --depth=1 --git-lfs
+#repo init -u https://github.com/accupara/los16.git -b lineage-16.0 --depth=1 --git-lfs
 repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --depth=1 --git-lfs
 
 git clone https://github.com/jayz1212/local.git -b main .repo/local_manifests
