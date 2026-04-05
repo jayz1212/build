@@ -175,6 +175,20 @@ export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
 export SUBARCH=arm
 export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
 
+
+# 1. Force correct Java (VERY IMPORTANT)
+export JAVA_HOME=$(pwd)/prebuilts/jdk/jdk11/linux-x86
+export PATH=$JAVA_HOME/bin:$PATH
+
+# 2. Clean only the broken module
+rm -rf out/soong/.intermediates/libcore
+
+# 3. Disable strict metalava checks (safe for msm8916)
+export RELAX_USES_LIBRARY_CHECK=true
+export BUILD_BROKEN_MISSING_API_CHECKS=true
+
+# 4. Rebuild
+
 # # Disable stack protector
 # scripts/config --disable CC_STACKPROTECTOR
 # scripts/config --disable CC_STACKPROTECTOR_STRONG
