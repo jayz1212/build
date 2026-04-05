@@ -55,6 +55,3 @@ brunch a5ltechn 2>&1 | tee build.log
 
 # Upload to ix.ioe
 curl -F "file=@build.log" https://temp.sh/upload
-
-
-grep -F "sysfs /devices/platform/leds-mt65xx" out/soong/.intermediates/system/sepolicy/plat_sepolicy.cil/android_common/plat_sepolicy.cil 2>&1 | tee build.log
