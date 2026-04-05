@@ -25,6 +25,7 @@ rm -rf .repo/local_manifests
 rm -rf device/samsung
 rm -rf vendor/samsung
 rm -rf kernel/samsung
+rm -rf *.tar.gz
 ##https://github.com/accupara/los-cm14.1.git -b cm-14.1 --depth=1 --git-lfs
 #repo init -u https://github.com/accupara/los16.git -b lineage-16.0 --depth=1 --git-lfs
 repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --depth=1 --git-lfs
