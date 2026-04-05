@@ -82,9 +82,8 @@ export READELF=llvm-readelf
 export HOSTCC=clang
 export HOSTCXX=clang++
 export CLANG_TRIPLE=arm-linux-gnueabi-
+export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
 
-# Then run your make command
-make O=out/target/product/a5ltechn/obj/KERNEL_OBJ zImage
 brunch a5ltechn 2>&1 | tee build.log
 
 # Upload to ix.ioe
