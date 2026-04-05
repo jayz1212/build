@@ -14,6 +14,10 @@ export JAVA_HOME=/opt/jdk-9 && \
 export PATH=$JAVA_HOME/bin:$PATH && \
 java -version
 
+
+
+sudo apt update
+sudo apt install python-is-python3
 export PYTHON=python3.10
 export PYTHON=python3
 
