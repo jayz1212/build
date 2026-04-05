@@ -20,6 +20,7 @@ sudo apt update
 sudo apt install python-is-python3
 export PYTHON=python3.10
 export PYTHON=python3
+rm -rf src/android
 
 rm -rf .repo/local_manifests
 rm -rf device/samsung
