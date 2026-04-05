@@ -2,104 +2,20 @@
 
 #!/usr/bin/env bash
 
+cd /tmp && \
+wget https://download.java.net/java/GA/jdk9/9/binaries/openjdk-9_linux-x64_bin.tar.gz && \
+tar -xvf openjdk-9_linux-x64_bin.tar.gz && \
+sudo mv jdk-9 /opt/jdk-9 && \
+sudo update-alternatives --install /usr/bin/java java /opt/jdk-9/bin/java 1 && \
+sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-9/bin/javac 1 && \
+echo 'export JAVA_HOME=/opt/jdk-9' >> ~/.bashrc && \
+echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc && \
+export JAVA_HOME=/opt/jdk-9 && \
+export PATH=$JAVA_HOME/bin:$PATH && \
+java -version
 
-# echo "🔥 FULL AUTO FIX STARTING..."
-
-# # -------------------------------
-
-# # 1. Fix pacman keyring (force clean)
-
-# # -------------------------------
-
-# echo "🔑 Fixing pacman keys..."
-# sudo rm -rf /etc/pacman.d/gnupg || true
-# sudo pacman-key --init
-# sudo pacman-key --populate archlinux
-
-# # Update keyring first (critical)
-
-# sudo pacman -Sy --noconfirm archlinux-keyring
-
-# # -------------------------------
-
-# # 2. Fix mirrors (fast + reliable)
-
-# # -------------------------------
-
-# echo "🌐 Refreshing mirrors..."
-# sudo pacman -S --noconfirm reflector
-# sudo reflector --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
-
-# # -------------------------------
-
-# # 3. Full system update
-
-# # -------------------------------
-
-# echo "📦 Updating system..."
-# sudo pacman -Syyu --noconfirm
-
-# # -------------------------------
-
-# # 4. Install Java 8
-
-# # -------------------------------
-
-# echo "☕ Installing Java 8..."
-# sudo pacman -S --noconfirm jdk8-openjdk
-
-# # -------------------------------
-
-# # 5. Switch to Java 8
-
-# # -------------------------------
-
-# echo "🔄 Switching to Java 8..."
-# sudo archlinux-java set java-8-openjdk
-
-# # Verify
-
-# java -version
-
-# # -------------------------------
-
-# # 6. Export env (extra safety)
-
-# # -------------------------------
-
-# export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
-# export PATH=$JAVA_HOME/bin:$PATH
-
-# -------------------------------
-
-# 7. Clean broken Android build
-
-# -------------------------------
-
-echo "🧹 Cleaning broken intermediates..."
-rm -rf out/soong/.intermediates/libcore || true
-rm -rf out/soong/.intermediates/frameworks || true
-rm -rf out/soong/.intermediates/external/v8 || true
-
-# -------------------------------
-
-# 8. Build
-
-# -------------------------------
-
-echo "🚀 Rebuilding..."
-
-
-
-# sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
-# sudo ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
-
-# # For 32-bit (needed for renderscript compilation)
-# sudo ln -s /usr/lib/i386-linux-gnu/libncurses.so.6 /usr/lib/i386-linux-gnu/libncurses.so.5
-# sudo ln -s /usr/lib/i386-linux-gnu/libtinfo.so.6 /usr/lib/i386-linux-gnu/libtinfo.so.5
-
-# ls -la /usr/lib/x86_64-linux-gnu/libncurses.so.5
-# ls -la /usr/lib/i386-linux-gnu/libncurses.so.5
+export PYTHON=python3.10
+export PYTHON=python3
 
 rm -rf .repo/local_manifests
 rm -rf device/samsung
