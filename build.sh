@@ -1,7 +1,7 @@
 
 
 #!/usr/bin/env bash
-set -e
+
 
 echo "🔥 FULL AUTO FIX STARTING..."
 
