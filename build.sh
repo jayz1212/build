@@ -17,7 +17,9 @@ java -version
 
 
 sudo apt update
-sudo apt install python-is-python3
+sudo apt install python-is-python3 -y
+sudo apt install libncurses5-dev -y
+
 export PYTHON=python3.10
 export PYTHON=python3
 rm -rf src/android
