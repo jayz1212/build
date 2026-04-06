@@ -13,7 +13,7 @@ echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc && \
 export JAVA_HOME=/opt/jdk-9 && \
 export PATH=$JAVA_HOME/bin:$PATH && \
 java -version
-
+cd -
 
 
 sudo apt update
