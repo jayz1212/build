@@ -18,7 +18,9 @@ java -version
 
 sudo apt update
 sudo apt install python-is-python3 -y
-sudo apt install libncurses5-dev -y
+sudo apt install libncurses6 libtinfo6 -y
+sudo ln -sf /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
 
 export PYTHON=python3.10
 export PYTHON=python3
