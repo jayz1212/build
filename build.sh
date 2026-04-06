@@ -22,7 +22,7 @@ sudo apt install libncurses5-dev -y
 
 export PYTHON=python3.10
 export PYTHON=python3
-rm -rf src/android
+sudo rm -rf src/android
 
 rm -rf .repo/local_manifests
 rm -rf device/samsung
@@ -117,7 +117,7 @@ export BUILD_BROKEN_MISSING_API_CHECKS=true
 # scripts/config --disable CC_STACKPROTECTOR
 # scripts/config --disable CC_STACKPROTECTOR_STRONG
 # scripts/config --disable CC_STACKPROTECTOR_REGULAR
-
+sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
 . build/envsetup.sh
 brunch a5ltechn 2>&1 | tee build.log
 
