@@ -120,6 +120,8 @@ export BUILD_BROKEN_MISSING_API_CHECKS=true
 # scripts/config --disable CC_STACKPROTECTOR_STRONG
 # scripts/config --disable CC_STACKPROTECTOR_REGULAR
 sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+
+echo 'LOCAL_SRC_FILES := $(filter-out %/sap/%, $(LOCAL_SRC_FILES))' >> packages/apps/Bluetooth/Android.mk
 . build/envsetup.sh
 brunch a5ltechn 2>&1 | tee build.log
 
