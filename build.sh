@@ -2,7 +2,6 @@
 
 #!/usr/bin/env bash
 
-cd /tmp && \
 wget https://download.java.net/java/GA/jdk9/9/binaries/openjdk-9_linux-x64_bin.tar.gz && \
 tar -xvf openjdk-9_linux-x64_bin.tar.gz && \
 sudo mv jdk-9 /opt/jdk-9 && \
@@ -13,7 +12,6 @@ echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc && \
 export JAVA_HOME=/opt/jdk-9 && \
 export PATH=$JAVA_HOME/bin:$PATH && \
 java -version
-cd -
 
 
 sudo apt update
