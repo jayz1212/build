@@ -98,7 +98,7 @@ export HOSTCXX=clang++
 export CLANG_TRIPLE=arm-linux-gnueabi-
 export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
 export SUBARCH=arm
-export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
+export CROSS_COMPILE=prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
 
 
 # # 1. Force correct Java (VERY IMPORTANT)
