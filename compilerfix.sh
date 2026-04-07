@@ -97,9 +97,3 @@ fi
 echo "🚀 Building bootimages..."
 set +u
 unset ZSH_VERSION
-source build/envsetup.sh
-lunch lineage_a5ltechn-userdebug
-
-mka bootimage -j$(nproc)
-
-echo "✅ DONE — if it fails again, send ONLY the next error."
