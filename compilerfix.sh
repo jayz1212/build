@@ -40,6 +40,8 @@ device/samsung/a5ltechn/*.mk 2>/dev/null || true
 sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
 kernel/samsung/msm8916/Makefile 2>/dev/null || true
 
+grep "androidkernel" device/samsung/a5ltechn/* 2>/dev/null
+grep "androidkernel" kernel/samsung/msm8916/Makefile 2>/dev/null
 
 
 # =========================
@@ -49,8 +51,9 @@ kernel/samsung/msm8916/Makefile 2>/dev/null || true
 # =========================
 
 echo "✔ Disabling STACKPROTECTOR"
-find kernel/samsung/msm8916 -type f -name "*defconfig" -exec 
-sed -i 's/CONFIG_CC_STACKPROTECTOR_REGULAR=y/# CONFIG_CC_STACKPROTECTOR is not set/g' {} ;
+
+sed -i 's/CONFIG_CC_STACKPROTECTOR_REGULAR=y/# CONFIG_CC_STACKPROTECTOR is not set/g' \
+kernel/samsung/msm8916/arch/arm/configs/*defconfig 2>/dev/null || true
 
 # =========================
 
