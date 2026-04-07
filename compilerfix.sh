@@ -40,8 +40,7 @@ device/samsung/a5ltechn/*.mk 2>/dev/null || true
 sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
 kernel/samsung/msm8916/Makefile 2>/dev/null || true
 
-grep "androidkernel" device/samsung/a5ltechn/* 2>/dev/null
-grep "androidkernel" kernel/samsung/msm8916/Makefile 2>/dev/null
+
 
 
 # =========================
