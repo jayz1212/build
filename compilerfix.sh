@@ -95,7 +95,7 @@ fi
 # =========================
 
 echo "🚀 Building bootimages..."
-set +u
+unset ZSH_VERSION
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 
