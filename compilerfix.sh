@@ -34,14 +34,12 @@ export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v 'mbt' || true | paste -sd:)
 
 echo "✔ Fast patch: androidkernel → androideabi"
 
-for f in 
-device/samsung/a5ltechn/BoardConfig.mk 
-device/samsung/a5ltechn/*.mk 
-kernel/samsung/msm8916/Makefile
-do
-if [ -f "$f" ]; then
-sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' "$f"
-fi
+for f in device/samsung/a5ltechn/BoardConfig.mk \
+         device/samsung/a5ltechn/*.mk \
+         kernel/samsung/msm8916/Makefile; do
+    if [ -f "$f" ]; then
+        sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' "$f"
+    fi
 done
 
 # Optional check (won’t break script)
