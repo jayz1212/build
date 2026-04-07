@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+
 
 echo "🔥 Applying FULL kernel build fixes..."
 
