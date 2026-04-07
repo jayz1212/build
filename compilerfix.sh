@@ -94,7 +94,7 @@ fi
 
 # =========================
 
-echo "🚀 Building bootimage..."
+echo "🚀 Building bootimages..."
 
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
