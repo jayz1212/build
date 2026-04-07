@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# safer strict mode
+
+set -euo pipefail
+shopt -s nullglob
 
 echo "🔥 Applying FULL kernel build fixes..."
 
@@ -11,7 +15,7 @@ echo "🔥 Applying FULL kernel build fixes..."
 
 echo "✔ Setting correct CROSS_COMPILE"
 export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
-export TARGET_KERNEL_CROSS_COMPILE=$CROSS_COMPILE
+export TARGET_KERNEL_CROSS_COMPILE="$CROSS_COMPILE"
 
 # =========================
 
@@ -20,39 +24,46 @@ export TARGET_KERNEL_CROSS_COMPILE=$CROSS_COMPILE
 # =========================
 
 echo "✔ Cleaning PATH (removing mbt wrapper)"
-export PATH=$(echo $PATH | tr ':' '\n' | grep -v 'mbt' | paste -sd:)
+export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v 'mbt' || true | paste -sd:)
 
 # =========================
 
-# 3. Fix any accidental androidkernel usage (just in case)
+# 3. Fix androidkernel usage (safe + fast)
 
 # =========================
 
-echo "✔ Replacing androidkernel toolchain references"
 echo "✔ Fast patch: androidkernel → androideabi"
 
-sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
-device/samsung/a5ltechn/BoardConfig.mk 2>/dev/null || true
+for f in 
+device/samsung/a5ltechn/BoardConfig.mk 
+device/samsung/a5ltechn/*.mk 
+kernel/samsung/msm8916/Makefile
+do
+if [ -f "$f" ]; then
+sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' "$f"
+fi
+done
 
-sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
-device/samsung/a5ltechn/*.mk 2>/dev/null || true
+# Optional check (won’t break script)
 
-sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
-kernel/samsung/msm8916/Makefile 2>/dev/null || true
-
-
-
+if grep -rq "androidkernel" device/samsung/a5ltechn 2>/dev/null; then
+echo "⚠ WARNING: androidkernel still found somewhere"
+else
+echo "✔ No androidkernel references found"
+fi
 
 # =========================
 
-# 4. Disable stack protector (required for old msm8916 kernel)
+# 4. Disable stack protector
 
 # =========================
 
 echo "✔ Disabling STACKPROTECTOR"
 
-sed -i 's/CONFIG_CC_STACKPROTECTOR_REGULAR=y/# CONFIG_CC_STACKPROTECTOR is not set/g' \
-kernel/samsung/msm8916/arch/arm/configs/*defconfig 2>/dev/null || true
+for f in kernel/samsung/msm8916/arch/arm/configs/*defconfig; do
+[ -f "$f" ] && 
+sed -i 's/CONFIG_CC_STACKPROTECTOR_REGULAR=y/# CONFIG_CC_STACKPROTECTOR is not set/g' "$f"
+done
 
 # =========================
 
@@ -70,7 +81,12 @@ rm -rf out/target/product/a5ltechn/obj/KERNEL_OBJ
 # =========================
 
 echo "✔ Verifying toolchain"
-ls /tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc >/dev/null
+TOOLCHAIN=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc
+
+if [ ! -f "$TOOLCHAIN" ]; then
+echo "❌ Toolchain missing!"
+exit 1
+fi
 
 # =========================
 
@@ -82,6 +98,7 @@ echo "🚀 Building bootimage..."
 
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
+
 mka bootimage -j$(nproc)
 
-echo "✅ DONE — if it fails again, send the NEXT error only."
+echo "✅ DONE — if it fails again, send ONLY the next error."
