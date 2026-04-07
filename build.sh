@@ -45,6 +45,7 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixsap.sh | bash
+
 export ARCH=arm
 export CC=clang
 export LD=ld.lld
@@ -82,6 +83,8 @@ export BUILD_BROKEN_MISSING_API_CHECKS=true
 sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
 
 echo 'LOCAL_SRC_FILES := $(filter-out %/sap/%, $(LOCAL_SRC_FILES))' >> packages/apps/Bluetooth/Android.mk
+
+curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh | bash
 . build/envsetup.sh
 brunch a5ltechn 2>&1 | tee build.log
 
