@@ -29,8 +29,18 @@ export PATH=$(echo $PATH | tr ':' '\n' | grep -v 'mbt' | paste -sd:)
 # =========================
 
 echo "✔ Replacing androidkernel toolchain references"
-grep -rl "arm-linux-androidkernel-" device/ kernel/ 2>/dev/null | 
-xargs -r sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g'
+echo "✔ Fast patch: androidkernel → androideabi"
+
+sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
+device/samsung/a5ltechn/BoardConfig.mk 2>/dev/null || true
+
+sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
+device/samsung/a5ltechn/*.mk 2>/dev/null || true
+
+sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' \
+kernel/samsung/msm8916/Makefile 2>/dev/null || true
+
+
 
 # =========================
 
