@@ -6,7 +6,7 @@
 
 # =========================
 
-set -euo pipefail
+set -eo pipefail
 shopt -s nullglob
 
 echo "🔥 Applying FULL kernel build fixes..."
