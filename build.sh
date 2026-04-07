@@ -41,46 +41,7 @@ sed -i 's|PRODUCT_AAPT_CONFIG := normal hdpi xhdpi|PRODUCT_AAPT_CONFIG ?= normal
 sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
 . build/envsetup.sh
 
-# set -e
 
-# BASE="hardware/samsung/ril/libsecril-client"
-# INCLUDE_PATH="hardware/samsung/ril/libril/include"
-
-# echo "[*] Fixing ril_vendor.h include..."
-
-# # --- ANDROID.MK ---
-# if [ -f "$BASE/Android.mk" ]; then
-#     echo "[*] Found Android.mk"
-
-#     if grep -q "$INCLUDE_PATH" "$BASE/Android.mk"; then
-#         echo "[✓] Include path already exists (Android.mk)"
-#     else
-#         echo "[*] Patching Android.mk..."
-
-#         sed -i '/LOCAL_C_INCLUDES +=/a\    '"$INCLUDE_PATH" "$BASE/Android.mk"
-
-#         echo "[✓] Patched Android.mk"
-#     fi
-# fi
-
-# # --- ANDROID.BP ---
-# if [ -f "$BASE/Android.bp" ]; then
-#     echo "[*] Found Android.bp"
-
-#     if grep -q "$INCLUDE_PATH" "$BASE/Android.bp"; then
-#         echo "[✓] Include path already exists (Android.bp)"
-#     else
-#         echo "[*] Patching Android.bp..."
-
-#         sed -i '/include_dirs: \[/a\        "'"$INCLUDE_PATH"'",' "$BASE/Android.bp"
-
-#         echo "[✓] Patched Android.bp"
-#     fi
-# fi
-
-# echo "[✓] Done fixing ril_vendor.h include!"
-
-#curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixsap.sh | bash
@@ -98,7 +59,7 @@ export HOSTCXX=clang++
 export CLANG_TRIPLE=arm-linux-gnueabi-
 export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
 export SUBARCH=arm
-export CROSS_COMPILE=prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
+export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
 
 
 # # 1. Force correct Java (VERY IMPORTANT)
