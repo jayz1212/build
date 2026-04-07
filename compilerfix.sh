@@ -13,3 +13,4 @@ if [ ! -f mbt-bin-arm-linux-androidkernel-gcc ]; then
     sudo ln -sf arm-linux-androidkernel-gcc mbt-bin-arm-linux-androidkernel-gcc
     sudo ln -sf arm-linux-androidkernel-g++ mbt-bin-arm-linux-androidkernel-g++
 fi
+cd -
