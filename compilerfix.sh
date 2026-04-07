@@ -28,5 +28,5 @@ echo "Testing compiler:"
 ${CROSS_COMPILE}gcc --version | head -1
 
 # Clean and rebuild
-rm -rf out/target/product/a5ltechn/obj/KERNEL_OBJ
+#rm -rf out/target/product/a5ltechn/obj/KERNEL_OBJ
 
