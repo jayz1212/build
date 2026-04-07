@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# safer strict mode
+# =========================
+
+# Strict & safe mode
+
+# =========================
 
 set -euo pipefail
 shopt -s nullglob
@@ -24,11 +28,11 @@ export TARGET_KERNEL_CROSS_COMPILE="$CROSS_COMPILE"
 # =========================
 
 echo "✔ Cleaning PATH (removing mbt wrapper)"
-export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v 'mbt' || true | paste -sd:)
+export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v 'mbt' | paste -sd: || true)
 
 # =========================
 
-# 3. Fix androidkernel usage (safe + fast)
+# 3. Fix androidkernel usage (curl-safe)
 
 # =========================
 
@@ -41,10 +45,12 @@ kernel/samsung/msm8916/Makefile
 )
 
 for f in "${FILES[@]}"; do
-    [ -f "$f" ] && sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' "$f"
+if [ -f "$f" ]; then
+sed -i 's/arm-linux-androidkernel-/arm-linux-androideabi-/g' "$f"
+fi
 done
 
-# Optional check (won’t break script)
+# Optional check (safe with set -e)
 
 if grep -rq "androidkernel" device/samsung/a5ltechn 2>/dev/null; then
 echo "⚠ WARNING: androidkernel still found somewhere"
@@ -61,8 +67,9 @@ fi
 echo "✔ Disabling STACKPROTECTOR"
 
 for f in kernel/samsung/msm8916/arch/arm/configs/*defconfig; do
-[ -f "$f" ] && 
+if [ -f "$f" ]; then
 sed -i 's/CONFIG_CC_STACKPROTECTOR_REGULAR=y/# CONFIG_CC_STACKPROTECTOR is not set/g' "$f"
+fi
 done
 
 # =========================
@@ -81,6 +88,7 @@ rm -rf out/target/product/a5ltechn/obj/KERNEL_OBJ
 # =========================
 
 echo "✔ Verifying toolchain"
+
 TOOLCHAIN=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc
 
 if [ ! -f "$TOOLCHAIN" ]; then
