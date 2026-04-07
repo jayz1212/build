@@ -30,8 +30,3 @@ ${CROSS_COMPILE}gcc --version | head -1
 # Clean and rebuild
 rm -rf out/target/product/a5ltechn/obj/KERNEL_OBJ
 
-. build/envsetup.sh
-brunch a5ltechn 2>&1 | tee build.log
-
-# Upload to ix.ioe
-curl -F "file=@build.log" https://temp.sh/upload
