@@ -33,7 +33,10 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 
 
 
-echo "🔥 FINAL STABILIZATION (A5LTECHN)"
+#!/usr/bin/env bash
+set -e
+
+echo "🔥 STRIPPING TELEPHONY COMPLETELY"
 
 ANDROID_DIR="/tmp/src/android"
 DEVICE="a5ltechn"
@@ -48,96 +51,96 @@ if [[ -z "$DEVICE_DIR" ]]; then
 fi
 
 # =========================================
-# 📡 1. CLEAN RIL STUB (NO CRASHES)
+# 📡 1. REMOVE FRAMEWORK TELEPHONY PACKAGES
 # =========================================
-echo "📡 Fixing RIL properly..."
+echo "📡 Removing telephony packages..."
 
-# Remove rild service from init
-find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/rild/d' {} +
+rm -rf packages/services/Telephony
+rm -rf frameworks/opt/telephony
 
-# Remove ril class services safely
-find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
+# =========================================
+# 📦 2. REMOVE TELEPHONY APPS
+# =========================================
+echo "📦 Removing telephony apps..."
 
-# Keep framework satisfied
-grep -q "ro.radio.noril" "$DEVICE_DIR/device.mk" || cat >> "$DEVICE_DIR/device.mk" <<EOF
+rm -rf packages/apps/Phone
+rm -rf packages/apps/Messaging
 
-# WiFi-only final
-PRODUCT_PROPERTY_OVERRIDES += ro.radio.noril=true
+# =========================================
+# 🧹 3. CLEAN DEVICE CONFIG
+# =========================================
+echo "🧹 Cleaning device config..."
+
+sed -i '/telephony/d' "$DEVICE_DIR/device.mk" 2>/dev/null || true
+sed -i '/libril/d' "$DEVICE_DIR/device.mk" 2>/dev/null || true
+sed -i '/rild/d' "$DEVICE_DIR/device.mk" 2>/dev/null || true
+
+# =========================================
+# ⚙️ 4. FORCE NO TELEPHONY
+# =========================================
+echo "⚙️ Forcing no telephony..."
+
+grep -q "TARGET_NO_TELEPHONY" "$DEVICE_DIR/BoardConfig.mk" || cat >> "$DEVICE_DIR/BoardConfig.mk" <<EOF
+
+TARGET_NO_TELEPHONY := true
+TARGET_NO_RADIOIMAGE := true
 EOF
 
 # =========================================
-# 🔐 2. SEPOLICY CLEAN (ENFORCING + QUIET)
+# 📱 5. SYSTEM PROPERTIES
+# =========================================
+echo "📱 Setting system properties..."
+
+cat >> "$DEVICE_DIR/device.mk" <<EOF
+
+# Fully no telephony
+PRODUCT_PROPERTY_OVERRIDES += \\
+    ro.radio.noril=true \\
+    ro.carrier=wifi-only \\
+    ro.telephony.default_network=0 \\
+    persist.radio.multisim.config=none
+EOF
+
+# =========================================
+# 🔇 6. REMOVE TELEPHONY PERMISSIONS
+# =========================================
+echo "🔇 Removing telephony permissions..."
+
+rm -rf frameworks/base/telephony
+rm -rf frameworks/base/opt/telephony
+
+# =========================================
+# 🔐 7. SEPOLICY CLEAN
 # =========================================
 echo "🔐 Cleaning SEPolicy..."
 
 SEPOLICY_DIR="$DEVICE_DIR/sepolicy"
-
 mkdir -p "$SEPOLICY_DIR"
-
-cat >> "$SEPOLICY_DIR/system_server.te" <<EOF
-
-# WiFi-only allowances
-allow system_server self:capability { net_admin net_raw };
-allow system_server sysfs:file rw_file_perms;
-EOF
 
 cat >> "$SEPOLICY_DIR/domain.te" <<EOF
 
-# Reduce log spam
-dontaudit domain self:capability net_raw;
-dontaudit domain kernel:system module_request;
+# Remove radio related denials
+dontaudit domain radio_device:chr_file *;
+dontaudit domain rild:process *;
 EOF
 
 # =========================================
-# 🔇 3. LOG SPAM REDUCTION
+# 🧼 8. CLEAN BUILD
 # =========================================
-echo "🔇 Reducing log spam..."
-
-cat >> "$DEVICE_DIR/device.mk" <<EOF
-
-# Reduce logcat noise
-PRODUCT_PROPERTY_OVERRIDES += \
-    log.tag.Telephony=ERROR \
-    log.tag.RIL=ERROR \
-    log.tag.Radio=ERROR
-EOF
-
-# =========================================
-# ⚙️ 4. KERNEL STABILITY TWEAKS
-# =========================================
-echo "⚙️ Improving kernel stability..."
-
-KERNEL_OUT="$ANDROID_DIR/out/target/product/$DEVICE/obj/KERNEL_OBJ/.config"
-
-if [[ -f "$KERNEL_OUT" ]]; then
-  scripts/config --file "$KERNEL_OUT" \
-    -e CONFIG_ANDROID_LOW_MEMORY_KILLER \
-    -e CONFIG_ZRAM \
-    -e CONFIG_ZSMALLOC \
-    -d CONFIG_DEBUG_KERNEL || true
-fi
-
-# =========================================
-# 📦 5. REMOVE UNUSED SERVICES
-# =========================================
-echo "📦 Cleaning unused services..."
-
-sed -i '/telephony/d' "$DEVICE_DIR/device.mk" 2>/dev/null || true
-
-# =========================================
-# 🧹 6. FINAL CLEAN
-# =========================================
-echo "🧹 Cleaning build..."
+echo "🧼 Cleaning build..."
 
 mka installclean
+rm -rf out/soong/.intermediates/*telephony*
+rm -rf out/soong/.intermediates/*ril*
 
 # =========================================
-# 🚀 7. REBUILD
+# 🚀 9. BUILD
 # =========================================
-echo "🚀 Rebuilding stable ROM..."
+echo "🚀 Building WiFi-only ROM..."
 
 source build/envsetup.sh
 lunch lineage_${DEVICE}-userdebug
+make installclean
 
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 echo ""
