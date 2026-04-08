@@ -66,21 +66,30 @@ if [ -f "$SMK" ]; then
 fi
 
 # =========================================
-# 3. DISABLE RILD BUILD (REAL FIX)
+# 3. FORCE REMOVE RILD (NUCLEAR FIX)
 # =========================================
-echo "🔥 Disabling rild (Soong + Make)..."
+echo "💥 Force removing rild completely..."
 
-# Kill in Android.bp (MAIN fix)
+# Delete rild source entirely
+rm -rf hardware/ril/rild
+
+# Break any reference in Android.bp
 if [ -f hardware/ril/Android.bp ]; then
-  sed -i 's/name: "rild"/name: "rild_disabled"/g' hardware/ril/Android.bp
+  sed -i '/rild/d' hardware/ril/Android.bp
 fi
 
-# Kill in Android.mk (legacy safety)
+# Break any reference in Android.mk
 sed -i '/rild/d' hardware/ril/Android.mk 2>/dev/null || true
 
-# Remove from any product packages
+# Remove from device tree
 DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
 sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
+
+# Remove from init scripts
+find $DEVICE_DIR -name "*.rc" -exec sed -i '/rild/d' {} +
+find $DEVICE_DIR -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
+
+echo "✅ rild completely removed from build graph"
 
 # =========================================
 # 4. CREATE RIL STUB
@@ -163,8 +172,9 @@ rm -rf out/soong/.intermediates/*ril*
 
 echo "✅ FINAL WiFi-only fix applied"
 cd /tmp/src/android
-rm -rf out/target/product/*/obj/*ril*
-rm -rf out/soong/.intermediates/*ril*
+rm -rf out/soong
+rm -rf out/.module_paths
+
 unset PATH_OVERRIDE_SOONG
 
 source build/envsetup.sh
