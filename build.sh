@@ -79,10 +79,17 @@ java -version
 sleep 100
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
-unset JAVA_HOME
+# ✅ FORCE JAVA HERE
+export OVERRIDE_JAVA_HOME=/usr/lib/jvm/java-8-openjdk
+export ANDROID_JAVA_HOME=/usr/lib/jvm/java-8-openjdk
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
 export PATH=$JAVA_HOME/bin:$PATH
 hash -r
+
+# ✅ CLEAN AFTER JAVA FIX
+rm -rf out/soong/.intermediates/libcore
+
+# build
 m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 #make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
