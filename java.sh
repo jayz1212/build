@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
+sudo rm -rf /etc/pacman.d/gnupg /var/cache/pacman/pkg/*
+sudo pacman-key --init
+sudo pacman-key --populate archlinux
+sudo pacman-key --refresh-keys --keyserver hkps://keyserver.ubuntu.com
+sudo pacman -Sy --noconfirm archlinux-keyring
 
 
 
-sudo rm -rf /etc/pacman.d/gnupg /var/cache/pacman/pkg/* && \
-sudo pacman-key --init && \
-sudo pacman-key --populate archlinux && \
-sudo pacman-key --refresh-keys --keyserver hkps://keyserver.ubuntu.com || true && \
-sudo pacman -Sy --noconfirm --needed archlinux-keyring && \
 sudo pacman -S --noconfirm jdk8-openjdk ncurses python && \
 sudo archlinux-java set java-8-openjdk && \
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk && \
