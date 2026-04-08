@@ -36,7 +36,7 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 #!/usr/bin/env bash
 set -e
 
-echo "🔥 AUTO FULL FIX (RECOVERY + WIFI-ONLY STABLE)"
+echo "⚙️ Applying SAFE WiFi-only fix (no source restore)"
 
 ANDROID_DIR="/tmp/src/android"
 DEVICE="a5ltechn"
@@ -44,22 +44,15 @@ DEVICE="a5ltechn"
 cd "$ANDROID_DIR"
 
 # =========================================
-# 🔄 1. RESTORE TELEPHONY (CRITICAL FIX)
+# 1. REMOVE ONLY BROKEN SAMSUNG RIL
 # =========================================
-echo "🔄 Restoring telephony framework..."
-
-repo sync frameworks/base frameworks/opt/telephony packages/services/Telephony --force-sync
-
-# =========================================
-# 📡 2. REMOVE BROKEN RIL
-# =========================================
-echo "📡 Removing broken RIL..."
-
+echo "📡 Removing Samsung RIL only..."
 rm -rf hardware/samsung/ril
-rm -rf hardware/ril
+
+# ⚠️ DO NOT remove hardware/ril anymore
 
 # =========================================
-# 🧱 3. CREATE RIL STUB
+# 2. CREATE STUB (SAFE)
 # =========================================
 echo "🧱 Creating RIL stub..."
 
@@ -84,38 +77,28 @@ cat > hardware/ril_stub/Android.bp <<'EOF'
 cc_library_shared {
     name: "libril",
     srcs: ["ril.cpp"],
-    shared_libs: [
-        "liblog",
-        "libcutils",
-    ],
+    shared_libs: ["liblog", "libcutils"],
     cflags: ["-Wno-unused-parameter"],
 }
 EOF
 
 # =========================================
-# 📱 4. PATCH DEVICE CONFIG
+# 3. PATCH DEVICE CLEANLY
 # =========================================
-echo "📱 Patching device config..."
-
 DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
 
-if [[ -z "$DEVICE_DIR" ]]; then
-  echo "❌ Device tree not found"
-  exit 1
-fi
+echo "📱 Patching device tree..."
 
-# Clean old junk
+# clean old junk safely
 sed -i '/libril/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 
-# Add clean config
+# append only if missing
 grep -q "ro.radio.noril" "$DEVICE_DIR/device.mk" || cat >> "$DEVICE_DIR/device.mk" <<EOF
 
-# WiFi-only clean config
+# WiFi-only config
 PRODUCT_PROPERTY_OVERRIDES += \\
-    ro.radio.noril=true \\
-    ro.telephony.default_network=0 \\
-    persist.radio.multisim.config=none
+    ro.radio.noril=true
 
 PRODUCT_PACKAGES += \\
     TelephonyProviderStub \\
@@ -130,7 +113,7 @@ BOARD_PROVIDES_LIBRIL := true
 EOF
 
 # =========================================
-# 🔧 5. DISABLE RIL SERVICES
+# 4. DISABLE RIL SERVICES
 # =========================================
 echo "🔧 Disabling RIL services..."
 
@@ -138,35 +121,17 @@ find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/rild/d' {} +
 find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
 
 # =========================================
-# 🔵 6. FIX BLUETOOTH SAP
+# 5. CLEAN ONLY NECESSARY FILES
 # =========================================
-echo "🔵 Fixing Bluetooth SAP..."
+echo "🧹 Cleaning RIL leftovers..."
 
-sed -i '/sap/d' packages/apps/Bluetooth/Android.bp 2>/dev/null || true
-
-# =========================================
-# 🧠 7. METALAVA SAFE MODE
-# =========================================
-export WITHOUT_CHECK_API=true
-
-# =========================================
-# 🧹 8. CLEAN BUILD (IMPORTANT)
-# =========================================
-echo "🧹 Cleaning build..."
-
-mka installclean
-rm -rf out/soong
 rm -rf out/target/product/*/obj/*ril*
 rm -rf out/soong/.intermediates/*ril*
 
-# =========================================
-# 🚀 9. BUILD
-# =========================================
-echo "🚀 Building..."
+# DO NOT wipe full out/soong anymore
 
-source build/envsetup.sh
-lunch lineage_${DEVICE}-userdebug
-
+echo "✅ Safe fix applied"
+. build/envsetup.sh
 make installclean
 
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
