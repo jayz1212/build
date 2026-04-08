@@ -45,7 +45,7 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
-curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixsap.sh | bash
+
 
 # export ARCH=arm
 # export CC=clang
