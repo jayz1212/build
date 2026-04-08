@@ -74,6 +74,7 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compil
 curl -sf https://raw.githubusercontent.com/jayz1212/build/a4bdf55c6e6584bb670d90596ad46d2f9f8edb33/fixcurs.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/4ff76f942afb63b356034ad5e4068bb41d7781c8/fixsap.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/1448334332344b605fdb4a6dadf5a3beece4883d/java.sh | bash
+unset JAVA_HOME
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
 export PATH=$JAVA_HOME/bin:$PATH
 java -version
