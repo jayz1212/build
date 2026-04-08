@@ -78,19 +78,27 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.
 
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
-# ✅ FORCE JAVA HERE
-export OVERRIDE_JAVA_HOME=/usr/lib/jvm/java-8-openjdk
-export ANDROID_JAVA_HOME=/usr/lib/jvm/java-8-openjdk
-export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
-export PATH=$JAVA_HOME/bin:$PATH
+echo "☕ Forcing Java 8 (hard override)..."
+
+JDK8="/usr/lib/jvm/java-8-openjdk"
+
+export JAVA_HOME="$JDK8"
+export PATH="$JAVA_HOME/bin:$PATH"
+
+# 🔥 HARD FIX
+ln -sf $JDK8/bin/java prebuilts/jdk/jdk9/linux-x86/bin/java
+
 hash -r
 
-# ✅ CLEAN AFTER JAVA FIX
-rm -rf out/soong/.intermediates/libcore
+which java
+java -version
+
+# CLEAN AFTER FIX
+rm -rf out/soong/.intermediates
 
 # build
-m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-#make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+#m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
 
