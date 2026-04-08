@@ -150,7 +150,9 @@ echo "🧹 Cleaning RIL leftovers..."
 
 rm -rf out/target/product/*/obj/*ril*
 rm -rf out/soong/.intermediates/*ril*
+cd /tmp/src/android
 
+unset PATH_OVERRIDE_SOONG
 echo "✅ FINAL WiFi-only fix applied (RIL fully neutralized)"
 mka installclean
 
