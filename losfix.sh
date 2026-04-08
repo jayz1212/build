@@ -150,7 +150,7 @@ unset PATH_OVERRIDE_SOONG
 source build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 echo "✅ Safe fix applied"
-mka clean-soong
+mka installclean
 
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 echo ""
