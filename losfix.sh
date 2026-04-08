@@ -172,8 +172,7 @@ rm -rf out/soong/.intermediates/*ril*
 
 echo "✅ FINAL WiFi-only fix applied"
 cd /tmp/src/android
-rm -rf out/soong
-rm -rf out/.module_paths
+
 
 unset PATH_OVERRIDE_SOONG
 
