@@ -100,3 +100,5 @@ sleep 10
 lunch lineage_a5ltechn-userdebug
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
+java -version
+
