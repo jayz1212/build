@@ -4,8 +4,8 @@ sudo rm -rf /etc/pacman.d/gnupg /var/cache/pacman/pkg/*
 sudo pacman-key --init
 sudo pacman-key --populate archlinux
 sudo pacman-key --refresh-keys --keyserver hkps://keyserver.ubuntu.com
-sudo pacman -Sy --noconfirm archlinux-keyring
-
+#sudo pacman -Sy --noconfirm archlinux-keyring
+sudo pacman -Syu --noconfirm
 
 
 sudo pacman -S --noconfirm jdk8-openjdk ncurses python && \
