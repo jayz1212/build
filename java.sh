@@ -60,7 +60,4 @@ rm -rf frameworks/base/test-mock || true
 # =============================
 # 8. Build
 # =============================
-echo "🚀 Starting build..."
-mka bacon -j$(nproc)
 
-echo "✅ Done!"
