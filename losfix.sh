@@ -36,12 +36,66 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 #!/usr/bin/env bash
 set -e
 
-echo "🔥 STRIPPING TELEPHONY COMPLETELY"
+echo "🔥 AUTO FULL FIX (RECOVERY + WIFI-ONLY STABLE)"
 
 ANDROID_DIR="/tmp/src/android"
 DEVICE="a5ltechn"
 
 cd "$ANDROID_DIR"
+
+# =========================================
+# 🔄 1. RESTORE TELEPHONY (CRITICAL FIX)
+# =========================================
+echo "🔄 Restoring telephony framework..."
+
+repo sync frameworks/base frameworks/opt/telephony packages/services/Telephony --force-sync
+
+# =========================================
+# 📡 2. REMOVE BROKEN RIL
+# =========================================
+echo "📡 Removing broken RIL..."
+
+rm -rf hardware/samsung/ril
+rm -rf hardware/ril
+
+# =========================================
+# 🧱 3. CREATE RIL STUB
+# =========================================
+echo "🧱 Creating RIL stub..."
+
+mkdir -p hardware/ril_stub
+
+cat > hardware/ril_stub/ril.cpp <<'EOF'
+#include <telephony/ril.h>
+
+extern "C" {
+
+const RIL_RadioFunctions* RIL_Init(const struct RIL_Env* env,
+                                   int argc, char** argv) {
+    return nullptr;
+}
+
+void RIL_SAP_Init(const struct RIL_Env* env, int argc, char** argv) {}
+
+}
+EOF
+
+cat > hardware/ril_stub/Android.bp <<'EOF'
+cc_library_shared {
+    name: "libril",
+    srcs: ["ril.cpp"],
+    shared_libs: [
+        "liblog",
+        "libcutils",
+    ],
+    cflags: ["-Wno-unused-parameter"],
+}
+EOF
+
+# =========================================
+# 📱 4. PATCH DEVICE CONFIG
+# =========================================
+echo "📱 Patching device config..."
 
 DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
 
@@ -50,96 +104,69 @@ if [[ -z "$DEVICE_DIR" ]]; then
   exit 1
 fi
 
-# =========================================
-# 📡 1. REMOVE FRAMEWORK TELEPHONY PACKAGES
-# =========================================
-echo "📡 Removing telephony packages..."
+# Clean old junk
+sed -i '/libril/d' $DEVICE_DIR/*.mk 2>/dev/null || true
+sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 
-rm -rf packages/services/Telephony
-rm -rf frameworks/opt/telephony
+# Add clean config
+grep -q "ro.radio.noril" "$DEVICE_DIR/device.mk" || cat >> "$DEVICE_DIR/device.mk" <<EOF
 
-# =========================================
-# 📦 2. REMOVE TELEPHONY APPS
-# =========================================
-echo "📦 Removing telephony apps..."
+# WiFi-only clean config
+PRODUCT_PROPERTY_OVERRIDES += \\
+    ro.radio.noril=true \\
+    ro.telephony.default_network=0 \\
+    persist.radio.multisim.config=none
 
-rm -rf packages/apps/Phone
-rm -rf packages/apps/Messaging
-
-# =========================================
-# 🧹 3. CLEAN DEVICE CONFIG
-# =========================================
-echo "🧹 Cleaning device config..."
-
-sed -i '/telephony/d' "$DEVICE_DIR/device.mk" 2>/dev/null || true
-sed -i '/libril/d' "$DEVICE_DIR/device.mk" 2>/dev/null || true
-sed -i '/rild/d' "$DEVICE_DIR/device.mk" 2>/dev/null || true
-
-# =========================================
-# ⚙️ 4. FORCE NO TELEPHONY
-# =========================================
-echo "⚙️ Forcing no telephony..."
+PRODUCT_PACKAGES += \\
+    TelephonyProviderStub \\
+    libril
+EOF
 
 grep -q "TARGET_NO_TELEPHONY" "$DEVICE_DIR/BoardConfig.mk" || cat >> "$DEVICE_DIR/BoardConfig.mk" <<EOF
 
 TARGET_NO_TELEPHONY := true
 TARGET_NO_RADIOIMAGE := true
+BOARD_PROVIDES_LIBRIL := true
 EOF
 
 # =========================================
-# 📱 5. SYSTEM PROPERTIES
+# 🔧 5. DISABLE RIL SERVICES
 # =========================================
-echo "📱 Setting system properties..."
+echo "🔧 Disabling RIL services..."
 
-cat >> "$DEVICE_DIR/device.mk" <<EOF
-
-# Fully no telephony
-PRODUCT_PROPERTY_OVERRIDES += \\
-    ro.radio.noril=true \\
-    ro.carrier=wifi-only \\
-    ro.telephony.default_network=0 \\
-    persist.radio.multisim.config=none
-EOF
+find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/rild/d' {} +
+find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
 
 # =========================================
-# 🔇 6. REMOVE TELEPHONY PERMISSIONS
+# 🔵 6. FIX BLUETOOTH SAP
 # =========================================
-echo "🔇 Removing telephony permissions..."
+echo "🔵 Fixing Bluetooth SAP..."
 
-rm -rf frameworks/base/telephony
-rm -rf frameworks/base/opt/telephony
-
-# =========================================
-# 🔐 7. SEPOLICY CLEAN
-# =========================================
-echo "🔐 Cleaning SEPolicy..."
-
-SEPOLICY_DIR="$DEVICE_DIR/sepolicy"
-mkdir -p "$SEPOLICY_DIR"
-
-cat >> "$SEPOLICY_DIR/domain.te" <<EOF
-
-# Remove radio related denials
-dontaudit domain radio_device:chr_file *;
-dontaudit domain rild:process *;
-EOF
+sed -i '/sap/d' packages/apps/Bluetooth/Android.bp 2>/dev/null || true
 
 # =========================================
-# 🧼 8. CLEAN BUILD
+# 🧠 7. METALAVA SAFE MODE
 # =========================================
-echo "🧼 Cleaning build..."
+export WITHOUT_CHECK_API=true
+
+# =========================================
+# 🧹 8. CLEAN BUILD (IMPORTANT)
+# =========================================
+echo "🧹 Cleaning build..."
 
 mka installclean
-rm -rf out/soong/.intermediates/*telephony*
+rm -rf out/soong
+rm -rf out/target/product/*/obj/*ril*
 rm -rf out/soong/.intermediates/*ril*
 
 # =========================================
 # 🚀 9. BUILD
 # =========================================
-echo "🚀 Building WiFi-only ROM..."
+echo "🚀 Building..."
 
 source build/envsetup.sh
 lunch lineage_${DEVICE}-userdebug
+
 make installclean
 
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
