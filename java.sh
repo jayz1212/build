@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 sudo rm -rf /etc/pacman.d/gnupg /var/cache/pacman/pkg/* && \
 sudo pacman-key --init && \
 sudo pacman-key --populate archlinux && \
