@@ -66,12 +66,21 @@ if [ -f "$SMK" ]; then
 fi
 
 # =========================================
-# 3. DISABLE RILD BUILD (CRITICAL FIX)
+# 3. DISABLE RILD BUILD (REAL FIX)
 # =========================================
-echo "🔥 Disabling rild build..."
+echo "🔥 Disabling rild (Soong + Make)..."
 
-# Remove rild from hardware/ril build system
+# Kill in Android.bp (MAIN fix)
+if [ -f hardware/ril/Android.bp ]; then
+  sed -i 's/name: "rild"/name: "rild_disabled"/g' hardware/ril/Android.bp
+fi
+
+# Kill in Android.mk (legacy safety)
 sed -i '/rild/d' hardware/ril/Android.mk 2>/dev/null || true
+
+# Remove from any product packages
+DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
+sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 
 # =========================================
 # 4. CREATE RIL STUB
