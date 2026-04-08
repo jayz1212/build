@@ -36,7 +36,7 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 #!/usr/bin/env bash
 set -e
 
-echo "⚙️ Applying SAFE WiFi-only fix (no source restore)"
+echo "⚙️ Applying FINAL WiFi-only fix (with Samsung RIL patch)"
 
 ANDROID_DIR="/tmp/src/android"
 DEVICE="a5ltechn"
@@ -44,15 +44,29 @@ DEVICE="a5ltechn"
 cd "$ANDROID_DIR"
 
 # =========================================
-# 1. REMOVE ONLY BROKEN SAMSUNG RIL
+# 1. REMOVE SAMSUNG RIL
 # =========================================
-echo "📡 Removing Samsung RIL only..."
+echo "📡 Removing Samsung RIL..."
 rm -rf hardware/samsung/ril
 
-# ⚠️ DO NOT remove hardware/ril anymore
+# =========================================
+# 2. FIX SAMSUNG ANDROID.MK (CRITICAL)
+# =========================================
+echo "🔧 Patching hardware/samsung/Android.mk..."
+
+SMK="hardware/samsung/Android.mk"
+
+if [ -f "$SMK" ]; then
+  cp "$SMK" "${SMK}.bak"
+
+  # Remove ONLY ril-related includes
+  sed -i '/hardware\/samsung\/ril/d' "$SMK"
+  sed -i '/\/ril\//d' "$SMK"
+  sed -i '/\bril\b/d' "$SMK"
+fi
 
 # =========================================
-# 2. CREATE STUB (SAFE)
+# 3. CREATE RIL STUB
 # =========================================
 echo "🧱 Creating RIL stub..."
 
@@ -83,17 +97,17 @@ cc_library_shared {
 EOF
 
 # =========================================
-# 3. PATCH DEVICE CLEANLY
+# 4. PATCH DEVICE TREE
 # =========================================
-DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
-
 echo "📱 Patching device tree..."
 
-# clean old junk safely
+DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
+
+# clean old entries
 sed -i '/libril/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 
-# append only if missing
+# add clean config
 grep -q "ro.radio.noril" "$DEVICE_DIR/device.mk" || cat >> "$DEVICE_DIR/device.mk" <<EOF
 
 # WiFi-only config
@@ -113,7 +127,7 @@ BOARD_PROVIDES_LIBRIL := true
 EOF
 
 # =========================================
-# 4. DISABLE RIL SERVICES
+# 5. DISABLE RIL SERVICES
 # =========================================
 echo "🔧 Disabling RIL services..."
 
@@ -121,16 +135,14 @@ find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/rild/d' {} +
 find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
 
 # =========================================
-# 5. CLEAN ONLY NECESSARY FILES
+# 6. CLEAN RIL ARTIFACTS
 # =========================================
 echo "🧹 Cleaning RIL leftovers..."
 
 rm -rf out/target/product/*/obj/*ril*
 rm -rf out/soong/.intermediates/*ril*
 
-# DO NOT wipe full out/soong anymore
-
-echo "✅ Safe fix applied"
+echo "✅ FINAL WiFi-only fix applied"
 cd /tmp/src/android
 
 unset PATH_OVERRIDE_SOONG
