@@ -87,9 +87,10 @@ echo 'LOCAL_SRC_FILES := $(filter-out %/sap/%, $(LOCAL_SRC_FILES))' >> packages/
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh | bash
 
-curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixsap.sh | bash
+curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
+
 . build/envsetup.sh
-brunch a5ltechn 2>&1 | tee build.log
+brunch a5ltechn -j4 2>&1 | tee build.log
 
 # Upload to ix.ioe
 curl -F "file=@build.log" https://temp.sh/upload
