@@ -1,32 +1,63 @@
-cd /tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/
+#!/usr/bin/env bash
+set -e
 
-# Test all the compiler variants
-echo "Testing arm-linux-androidkernel-gcc:"
-./arm-linux-androidkernel-gcc --version 2>&1 | head -1
+echo "🔥 Applying FULL kernel/toolchain fix..."
 
-echo -e "\nTesting mbt-bin-arm-linux-androidkernel-gcc:"
-ls -la mbt-bin-arm-linux-androidkernel-gcc
+# ===== 1. CLEAN BAD ENV =====
+echo "✔ Resetting environment"
+unset CROSS_COMPILE
 
-# If it doesn't exist, create it
-if [ ! -f mbt-bin-arm-linux-androidkernel-gcc ]; then
-    echo "Creating missing mbt-bin-arm-linux-androidkernel-gcc..."
-    sudo ln -sf arm-linux-androidkernel-gcc mbt-bin-arm-linux-androidkernel-gcc
-    sudo ln -sf arm-linux-androidkernel-g++ mbt-bin-arm-linux-androidkernel-g++
+# ===== 2. SET CORRECT TOOLCHAIN =====
+TOOLCHAIN="/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-"
+
+if [ ! -f "${TOOLCHAIN}gcc" ]; then
+    echo "❌ Toolchain not found!"
+    echo "Expected: ${TOOLCHAIN}gcc"
+    exit 1
 fi
-cd -
 
-unset CC CXX LD AR NM STRIP OBJCOPY OBJDUMP READELF CLANG_TRIPLE
-export ARCH=arm
-export SUBARCH=arm
-export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androidkernel-
-export HOSTCC=clang
-export HOSTCXX=clang++
+export CROSS_COMPILE=$TOOLCHAIN
+echo "✔ CROSS_COMPILE set to:"
+echo "   $CROSS_COMPILE"
 
-# Verify the setup
-echo "CROSS_COMPILE=$CROSS_COMPILE"
-echo "Testing compiler:"
-${CROSS_COMPILE}gcc --version | head -1
+# ===== 3. FIX ALL WRONG PREFIXES =====
+echo "✔ Replacing androidkernel → androideabi (global fix)"
 
-# Clean and rebuild
-#rm -rf out/target/product/a5ltechn/obj/KERNEL_OBJ
+grep -rl "androidkernel-" device kernel vendor 2>/dev/null | while read -r file; do
+    sed -i 's/androidkernel-/androideabi-/g' "$file"
+done
 
+# ===== 4. REMOVE LEADING SPACE BUG =====
+echo "✔ Fixing leading space in CROSS_COMPILE"
+
+grep -rl 'CROSS_COMPILE=" ' device kernel vendor 2>/dev/null | while read -r file; do
+    sed -i 's/CROSS_COMPILE=" /CROSS_COMPILE="/g' "$file"
+done
+
+grep -rl "CROSS_COMPILE= " device kernel vendor 2>/dev/null | while read -r file; do
+    sed -i 's/CROSS_COMPILE= /CROSS_COMPILE=/g' "$file"
+done
+
+# ===== 5. FORCE OVERRIDE IN BOARD CONFIG =====
+echo "✔ Forcing correct CROSS_COMPILE in BoardConfig"
+
+BOARD_FILES=$(find device -name "BoardConfig*.mk" 2>/dev/null)
+
+for f in $BOARD_FILES; do
+    sed -i '/CROSS_COMPILE/d' "$f"
+    echo "CROSS_COMPILE := $TOOLCHAIN" >> "$f"
+done
+
+# ===== 6. CLEAN OLD KERNEL BUILD =====
+echo "✔ Cleaning old kernel build"
+
+rm -rf out/target/product/*/obj/KERNEL_OBJ
+
+# ===== 7. VERIFY =====
+echo "✔ Verifying toolchain..."
+if ! command -v ${CROSS_COMPILE}gcc >/dev/null 2>&1; then
+    echo "❌ Toolchain not usable!"
+    exit 1
+fi
+
+echo "🚀 Kernel fix applied successfully!"
