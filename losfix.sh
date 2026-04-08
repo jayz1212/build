@@ -1,6 +1,38 @@
 #!/usr/bin/env bash
 set -e
 
+sudo rm -rf src/android
+
+rm -rf .repo/local_manifests
+rm -rf device/samsung
+rm -rf vendor/samsung
+rm -rf kernel/samsung
+rm -rf packages/apps/Bluetooth
+rm -rf *.tar.gz
+##https://github.com/accupara/los-cm14.1.git -b cm-14.1 --depth=1 --git-lfs
+#repo init -u https://github.com/accupara/los16.git -b lineage-16.0 --depth=1 --git-lfs
+repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --depth=1 --git-lfs
+
+git clone https://github.com/jayz1212/local.git -b main .repo/local_manifests
+repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
+/opt/crave/resync.sh
+
+sed -i 's|PRODUCT_AAPT_CONFIG := normal hdpi xhdpi|PRODUCT_AAPT_CONFIG ?= normal hdpi xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
+sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
+. build/envsetup.sh
+
+
+
+
+
+
+
+
+
+
+
+
+
 echo "🔥 FINAL STABILIZATION (A5LTECHN)"
 
 ANDROID_DIR="/tmp/src/android"
@@ -107,8 +139,7 @@ echo "🚀 Rebuilding stable ROM..."
 source build/envsetup.sh
 lunch lineage_${DEVICE}-userdebug
 
-mka bacon -j$(nproc)
-
+make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 echo ""
 echo "🎉 FINAL STABLE BUILD COMPLETE"
 echo ""
