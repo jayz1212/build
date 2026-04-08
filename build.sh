@@ -91,7 +91,7 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib
 curl -sf https://raw.githubusercontent.com/jayz1212/build/1448334332344b605fdb4a6dadf5a3beece4883d/java.sh | bash
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
-make bacon -j4 2>&1 | tee build.log
+make bacon -j8 2>&1 | tee build.log
 
 # Upload to ix.ioe
 curl -F "file=@build.log" https://temp.sh/upload
