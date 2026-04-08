@@ -150,11 +150,18 @@ echo "🧹 Cleaning RIL leftovers..."
 
 rm -rf out/target/product/*/obj/*ril*
 rm -rf out/soong/.intermediates/*ril*
-cd /tmp/src/android
 
+
+echo "✅ FINAL WiFi-only fix applied"
+cd /tmp/src/android
+rm -rf out/target/product/*/obj/*ril*
+rm -rf out/soong/.intermediates/*ril*
 unset PATH_OVERRIDE_SOONG
+
+source build/envsetup.sh
+lunch lineage_a5ltechn-userdebug
+echo "✅ Safe fix applied"
 echo "✅ FINAL WiFi-only fix applied (RIL fully neutralized)"
-mka installclean
 
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 echo ""
