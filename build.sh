@@ -81,7 +81,7 @@ export BUILD_BROKEN_MISSING_API_CHECKS=true
 # scripts/config --disable CC_STACKPROTECTOR
 # scripts/config --disable CC_STACKPROTECTOR_STRONG
 # scripts/config --disable CC_STACKPROTECTOR_REGULAR
-sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+
 
 echo 'LOCAL_SRC_FILES := $(filter-out %/sap/%, $(LOCAL_SRC_FILES))' >> packages/apps/Bluetooth/Android.mk
 
@@ -89,6 +89,7 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compil
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/1448334332344b605fdb4a6dadf5a3beece4883d/java.sh | bash
+curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixcurs.sh | bash
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 make bacon -j8 2>&1 | tee build.log
