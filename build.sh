@@ -90,7 +90,8 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compil
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
 
 . build/envsetup.sh
-brunch a5ltechn -j4 2>&1 | tee build.log
+lunch lineage_a5ltechn-userdebug
+make -j4 2>&1 | tee build.log
 
 # Upload to ix.ioe
 curl -F "file=@build.log" https://temp.sh/upload
