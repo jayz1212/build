@@ -85,6 +85,8 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/l
 echo 'LOCAL_SRC_FILES := $(filter-out %/sap/%, $(LOCAL_SRC_FILES))' >> packages/apps/Bluetooth/Android.mk
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh | bash
+
+curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixsap.sh | bash
 . build/envsetup.sh
 brunch a5ltechn 2>&1 | tee build.log
 
