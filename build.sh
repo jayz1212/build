@@ -94,7 +94,8 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/a4bdf55c6e6584bb670d90
 
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk && \
 export PATH=$JAVA_HOME/bin:$PATH
-
+java -version
+sleep 10
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
