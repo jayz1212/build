@@ -2,26 +2,26 @@
 
 #!/usr/bin/env bash
 
-wget https://download.java.net/java/GA/jdk9/9/binaries/openjdk-9_linux-x64_bin.tar.gz && \
-tar -xvf openjdk-9_linux-x64_bin.tar.gz && \
-sudo mv jdk-9 /opt/jdk-9 && \
-sudo update-alternatives --install /usr/bin/java java /opt/jdk-9/bin/java 1 && \
-sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-9/bin/javac 1 && \
-echo 'export JAVA_HOME=/opt/jdk-9' >> ~/.bashrc && \
-echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc && \
-export JAVA_HOME=/opt/jdk-9 && \
-export PATH=$JAVA_HOME/bin:$PATH && \
-java -version
+# wget https://download.java.net/java/GA/jdk9/9/binaries/openjdk-9_linux-x64_bin.tar.gz && \
+# tar -xvf openjdk-9_linux-x64_bin.tar.gz && \
+# sudo mv jdk-9 /opt/jdk-9 && \
+# sudo update-alternatives --install /usr/bin/java java /opt/jdk-9/bin/java 1 && \
+# sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-9/bin/javac 1 && \
+# echo 'export JAVA_HOME=/opt/jdk-9' >> ~/.bashrc && \
+# echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc && \
+# export JAVA_HOME=/opt/jdk-9 && \
+# export PATH=$JAVA_HOME/bin:$PATH && \
+# java -version
 
 
-sudo apt update
-sudo apt install python-is-python3 -y
-sudo apt install libncurses6 libtinfo6 -y
-sudo ln -sf /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
-sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
+# sudo apt update
+# sudo apt install python-is-python3 -y
+# sudo apt install libncurses6 libtinfo6 -y
+# sudo ln -sf /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+# sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
 
-export PYTHON=python3.10
-export PYTHON=python3
+# export PYTHON=python3.10
+# export PYTHON=python3
 sudo rm -rf src/android
 
 rm -rf .repo/local_manifests
