@@ -98,7 +98,9 @@ java -version
 sleep 10
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
-make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+
+m Bluetooth -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+#make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
 
