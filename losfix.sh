@@ -36,7 +36,7 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 #!/usr/bin/env bash
 set -e
 
-echo "⚙️ Applying FINAL WiFi-only fix (with Samsung RIL patch)"
+echo "⚙️ Applying FINAL WiFi-only fix (FULL PATCH)"
 
 ANDROID_DIR="/tmp/src/android"
 DEVICE="a5ltechn"
@@ -50,7 +50,7 @@ echo "📡 Removing Samsung RIL..."
 rm -rf hardware/samsung/ril
 
 # =========================================
-# 2. FIX SAMSUNG ANDROID.MK (CRITICAL)
+# 2. PATCH SAMSUNG ANDROID.MK
 # =========================================
 echo "🔧 Patching hardware/samsung/Android.mk..."
 
@@ -59,14 +59,21 @@ SMK="hardware/samsung/Android.mk"
 if [ -f "$SMK" ]; then
   cp "$SMK" "${SMK}.bak"
 
-  # Remove ONLY ril-related includes
   sed -i '/hardware\/samsung\/ril/d' "$SMK"
   sed -i '/\/ril\//d' "$SMK"
   sed -i '/\bril\b/d' "$SMK"
 fi
 
 # =========================================
-# 3. CREATE RIL STUB
+# 3. DISABLE RILD BUILD (CRITICAL FIX)
+# =========================================
+echo "🔥 Disabling rild build..."
+
+# Remove rild from hardware/ril build system
+sed -i '/rild/d' hardware/ril/Android.mk 2>/dev/null || true
+
+# =========================================
+# 4. CREATE RIL STUB
 # =========================================
 echo "🧱 Creating RIL stub..."
 
@@ -97,7 +104,7 @@ cc_library_shared {
 EOF
 
 # =========================================
-# 4. PATCH DEVICE TREE
+# 5. PATCH DEVICE TREE
 # =========================================
 echo "📱 Patching device tree..."
 
@@ -107,7 +114,7 @@ DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
 sed -i '/libril/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
 
-# add clean config
+# add WiFi-only config
 grep -q "ro.radio.noril" "$DEVICE_DIR/device.mk" || cat >> "$DEVICE_DIR/device.mk" <<EOF
 
 # WiFi-only config
@@ -119,6 +126,7 @@ PRODUCT_PACKAGES += \\
     libril
 EOF
 
+# board config
 grep -q "TARGET_NO_TELEPHONY" "$DEVICE_DIR/BoardConfig.mk" || cat >> "$DEVICE_DIR/BoardConfig.mk" <<EOF
 
 TARGET_NO_TELEPHONY := true
@@ -127,7 +135,7 @@ BOARD_PROVIDES_LIBRIL := true
 EOF
 
 # =========================================
-# 5. DISABLE RIL SERVICES
+# 6. DISABLE RIL SERVICES (INIT)
 # =========================================
 echo "🔧 Disabling RIL services..."
 
@@ -135,21 +143,14 @@ find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/rild/d' {} +
 find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
 
 # =========================================
-# 6. CLEAN RIL ARTIFACTS
+# 7. CLEAN RIL ARTIFACTS
 # =========================================
 echo "🧹 Cleaning RIL leftovers..."
 
 rm -rf out/target/product/*/obj/*ril*
 rm -rf out/soong/.intermediates/*ril*
 
-echo "✅ FINAL WiFi-only fix applied"
-cd /tmp/src/android
-
-unset PATH_OVERRIDE_SOONG
-
-source build/envsetup.sh
-lunch lineage_a5ltechn-userdebug
-echo "✅ Safe fix applied"
+echo "✅ FINAL WiFi-only fix applied (RIL fully neutralized)"
 mka installclean
 
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
