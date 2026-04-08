@@ -131,8 +131,14 @@ rm -rf out/soong/.intermediates/*ril*
 # DO NOT wipe full out/soong anymore
 
 echo "✅ Safe fix applied"
-. build/envsetup.sh
-make installclean
+cd /tmp/src/android
+
+unset PATH_OVERRIDE_SOONG
+
+source build/envsetup.sh
+lunch lineage_a5ltechn-userdebug
+
+mka clean-soong
 
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 echo ""
