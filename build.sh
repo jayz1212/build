@@ -88,7 +88,7 @@ echo 'LOCAL_SRC_FILES := $(filter-out %/sap/%, $(LOCAL_SRC_FILES))' >> packages/
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh | bash
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
-
+curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java.sh | bash
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 make bacon -j4 2>&1 | tee build.log
