@@ -75,8 +75,7 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/a4bdf55c6e6584bb670d90
 curl -sf https://raw.githubusercontent.com/jayz1212/build/4ff76f942afb63b356034ad5e4068bb41d7781c8/fixsap.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh | bash
 
-java -version
-sleep 100
+
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 # ✅ FORCE JAVA HERE
