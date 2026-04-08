@@ -99,6 +99,7 @@ rm -rf out/soong/.intermediates/frameworks/base
 rm -rf out/soong/.intermediates/libcore
 rm -rf out/soong/.intermediates/frameworks/base/api*
 # build
+make clean
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
