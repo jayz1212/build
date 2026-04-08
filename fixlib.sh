@@ -11,4 +11,6 @@ rm -rf out/soong/.intermediates/libcore
 # repo sync libcore -j$(nproc)
 
 # Rebuild safely
+. build/envsetup.sh
+breakfast a5ltechn 
 m core-platform-api-stubs -j1
