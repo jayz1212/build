@@ -90,6 +90,11 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compil
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/1448334332344b605fdb4a6dadf5a3beece4883d/java.sh | bash
 curl -sf https://raw.githubusercontent.com/jayz1212/build/a4bdf55c6e6584bb670d90596ad46d2f9f8edb33/fixcurs.sh | bash
+
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk && \
+export PATH=$JAVA_HOME/bin:$PATH
+
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
