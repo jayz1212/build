@@ -2,10 +2,11 @@
 set -e
 
 sudo rm -rf src/android
-
+rm -rf hardware/samsung
 rm -rf .repo/local_manifests
 rm -rf device/samsung
 rm -rf vendor/samsung
+rm -rf kernel/samsung
 rm -rf kernel/samsung
 rm -rf packages/apps/Bluetooth
 rm -rf *.tar.gz
