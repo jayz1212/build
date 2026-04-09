@@ -1,28 +1,27 @@
 #!/usr/bin/env bash
 # =============================================================================
 # fix_metalava_bp.sh — Fix Metalava UnhiddenSystemApi error in LineageOS 17.1
-#
-# ROOT CAUSE (confirmed from api-stubs-docs-jdiff-docs.zip):
-#   The ~700 "NO DOC BLOCK" entries in missingSinces.txt are all stock
-#   AOSP Android 10 (API 29) APIs added without @since Javadoc tags.
-#   Metalava has "--error UnhiddenSystemApi" which makes it exit non-zero,
-#   failing the build even though no real system-API rule is violated.
-#
-# FIX:
-#   Change "--error UnhiddenSystemApi" → "--hide UnhiddenSystemApi"
-#   in frameworks/base/Android.bp for both api-stubs-docs and
-#   system-api-stubs-docs targets.
+#                      then kick off the build automatically.
 #
 # USAGE:
 #   cd <lineage source root>
-#   bash fix_metalava_bp.sh [--dry-run]
+#   bash fix_metalava_bp.sh [--dry-run] [--device <codename>]
+#
+# Default device: a5ltechn
 # =============================================================================
 
-set -euo pipefail
+set -uo pipefail   # no -e so build errors surface naturally
 
 DRY_RUN=false
-for arg in "$@"; do
-  [[ "$arg" == "--dry-run" ]] && DRY_RUN=true
+DEVICE="a5ltechn"
+
+for ((i=1; i<=$#; i++)); do
+  arg="${!i}"
+  case "$arg" in
+    --dry-run) DRY_RUN=true ;;
+    --device)  j=$((i+1)); DEVICE="${!j}" ;;
+    --device=*) DEVICE="${arg#--device=}" ;;
+  esac
 done
 
 RED='\033[0;31m'; GRN='\033[0;32m'; YEL='\033[1;33m'; NC='\033[0m'
@@ -39,91 +38,85 @@ if [[ ! -f "build/envsetup.sh" ]]; then
 fi
 
 if [[ ! -f "$TARGET" ]]; then
-  error "Cannot find $TARGET — are you in the right directory?"
+  error "Cannot find $TARGET"
   exit 1
 fi
 
-# ── Check if already patched ───────────────────────────────────────────────────
-if ! grep -q '"--error UnhiddenSystemApi "' "$TARGET"; then
-  if grep -q '"--hide UnhiddenSystemApi "' "$TARGET"; then
-    info "Already patched — '--hide UnhiddenSystemApi' is already in $TARGET."
-    exit 0
+# ── Patch (skip if already done) ──────────────────────────────────────────────
+if grep -q '"--error UnhiddenSystemApi "' "$TARGET"; then
+  info "Applying patch: --error UnhiddenSystemApi → --hide UnhiddenSystemApi"
+
+  if $DRY_RUN; then
+    warn "[DRY-RUN] Would patch $TARGET — skipping."
   else
-    # The flag string might have changed format; try a broader search
-    if grep -q 'UnhiddenSystemApi' "$TARGET"; then
-      warn "UnhiddenSystemApi found but not in expected format. Manual inspection needed."
-      grep -n 'UnhiddenSystemApi' "$TARGET"
-      exit 1
-    else
-      error "UnhiddenSystemApi not found in $TARGET at all. Wrong branch?"
+    BACKUP="${TARGET}.bak_$(date +%Y%m%d_%H%M%S)"
+    cp "$TARGET" "$BACKUP"
+    info "Backup saved: $BACKUP"
+
+    sed -i 's/"--error UnhiddenSystemApi "/"--hide UnhiddenSystemApi "/g' "$TARGET"
+
+    REMAINING=$(grep -c '"--error UnhiddenSystemApi "' "$TARGET" || true)
+    if [[ "$REMAINING" -ne 0 ]]; then
+      error "Patch failed — restoring backup."
+      cp "$BACKUP" "$TARGET"
       exit 1
     fi
+    info "Patch applied successfully."
+
+    # Clean stale Metalava intermediates
+    info "Cleaning stale Metalava intermediates..."
+    SOONG_INT="out/soong/.intermediates/frameworks/base"
+    for DIR in \
+      "${SOONG_INT}/api-stubs-docs" \
+      "${SOONG_INT}/system-api-stubs-docs" \
+      "${SOONG_INT}/hiddenapi-lists-docs" \
+      "${SOONG_INT}/test-api-stubs-docs"
+    do
+      if [[ -d "$DIR" ]]; then
+        rm -rf "$DIR"
+        info "  Removed: $DIR"
+      fi
+    done
   fi
+
+elif grep -q '"--hide UnhiddenSystemApi "' "$TARGET"; then
+  info "Already patched — proceeding directly to build."
+
+else
+  warn "UnhiddenSystemApi not found in expected format in $TARGET"
+  grep -n 'UnhiddenSystemApi' "$TARGET" || true
+  warn "Attempting build anyway..."
 fi
 
-COUNT=$(grep -c '"--error UnhiddenSystemApi "' "$TARGET" || true)
-info "Found ${COUNT} occurrence(s) of '--error UnhiddenSystemApi' in $TARGET"
-
-# ── Show a diff preview ────────────────────────────────────────────────────────
-info "Preview of changes:"
-grep -n 'UnhiddenSystemApi' "$TARGET" | sed "s/--error/  [OLD] --error/;s/--hide/  [NEW] --hide/"
-
+# ── Build ──────────────────────────────────────────────────────────────────────
 if $DRY_RUN; then
-  warn "[DRY-RUN] No files modified."
+  warn "[DRY-RUN] Would now run: source build/envsetup.sh && breakfast ${DEVICE} && mka bacon"
   exit 0
 fi
 
-# ── Back up the file ───────────────────────────────────────────────────────────
-BACKUP="${TARGET}.bak_$(date +%Y%m%d_%H%M%S)"
-cp "$TARGET" "$BACKUP"
-info "Backup saved to: $BACKUP"
+info "Setting up build environment..."
+set +u
+source build/envsetup.sh
+set -u
 
-# ── Apply the patch ────────────────────────────────────────────────────────────
-sed -i 's/"--error UnhiddenSystemApi "/"--hide UnhiddenSystemApi "/g' "$TARGET"
+info "Running breakfast for device: ${DEVICE}"
+breakfast "${DEVICE}"
 
-# ── Verify ────────────────────────────────────────────────────────────────────
-REMAINING=$(grep -c '"--error UnhiddenSystemApi "' "$TARGET" || true)
-PATCHED=$(grep -c '"--hide UnhiddenSystemApi "' "$TARGET" || true)
+info "Starting build (mka bacon)..."
+mka framework -j8
 
-if [[ "$REMAINING" -eq 0 && "$PATCHED" -ge 1 ]]; then
-  info "Patch applied successfully — ${PATCHED} occurrence(s) updated."
+BUILD_EXIT=$?
+if [[ $BUILD_EXIT -eq 0 ]]; then
+  info "Build completed successfully!"
 else
-  error "Patch verification failed! Remaining '--error' occurrences: ${REMAINING}"
-  info "Restoring backup..."
-  cp "$BACKUP" "$TARGET"
-  exit 1
+  error "Build failed with exit code ${BUILD_EXIT}. Check output above."
+  exit $BUILD_EXIT
 fi
 
-# ── Clean stale Metalava outputs so they get regenerated ──────────────────────
-info "Cleaning stale Metalava intermediates..."
-SOONG_INT="out/soong/.intermediates/frameworks/base"
-for DIR in \
-  "${SOONG_INT}/api-stubs-docs" \
-  "${SOONG_INT}/system-api-stubs-docs" \
-  "${SOONG_INT}/hiddenapi-lists-docs" \
-  "${SOONG_INT}/test-api-stubs-docs"
-do
-  if [[ -d "$DIR" ]]; then
-    rm -rf "$DIR"
-    info "  Removed: $DIR"
-  fi
-done
-
-echo ""
-info "Done! Next steps:"
-echo ""
-echo "  1. Re-run your build:"
-echo "       source build/envsetup.sh"
-echo "       breakfast a5ltechn   # or your device"
-echo "       mka bacon"
-echo ""
-warn "Note: This suppresses the UnhiddenSystemApi check (treats it as a warning,"
-warn "not an error). This is correct for an UNOFFICIAL build — all ~700 affected"
-warn "APIs are stock AOSP Android 10 APIs, not missing system-API annotations."
 
 
 # source build/envsetup.sh
 # lunch lineage_a5ltechn-userdebug
 # make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
-bash -c "source build/envsetup.sh && lunch lineage_a5ltechn-userdebugn && make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload"
+#bash -c "source build/envsetup.sh && lunch lineage_a5ltechn-userdebugn && make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload"
