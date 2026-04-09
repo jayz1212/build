@@ -91,6 +91,28 @@ find $DEVICE_DIR -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
 
 echo "✅ rild completely removed from build graph"
 
+
+
+# =========================================
+# 4. REMOVE REFERENCE RIL (FINAL PIECE)
+# =========================================
+echo "💥 Removing reference RIL..."
+
+# Delete reference RIL source
+rm -rf hardware/ril/reference-ril
+
+# Remove references from Android.bp
+if [ -f hardware/ril/Android.bp ]; then
+  sed -i '/reference-ril/d' hardware/ril/Android.bp
+fi
+
+# Remove references from Android.mk
+sed -i '/reference-ril/d' hardware/ril/Android.mk 2>/dev/null || true
+
+# Remove from device tree if referenced
+sed -i '/reference-ril/d' $DEVICE_DIR/*.mk 2>/dev/null || true
+
+echo "✅ reference-ril removed"
 # =========================================
 # 4. CREATE RIL STUB
 # =========================================
