@@ -94,25 +94,26 @@ echo "✅ rild completely removed from build graph"
 
 
 # =========================================
-# 4. REMOVE REFERENCE RIL (FINAL PIECE)
+# 4. FORCE DISABLE reference-ril (REAL FIX)
 # =========================================
-echo "💥 Removing reference RIL..."
+echo "💥 Force disabling reference-ril..."
 
-# Delete reference RIL source
+# Remove source
 rm -rf hardware/ril/reference-ril
 
-# Remove references from Android.bp
+# Kill module in Android.bp (important)
 if [ -f hardware/ril/Android.bp ]; then
+  sed -i 's/name: "reference-ril"/name: "reference-ril_disabled"/g' hardware/ril/Android.bp
   sed -i '/reference-ril/d' hardware/ril/Android.bp
 fi
 
-# Remove references from Android.mk
+# Kill from Android.mk
 sed -i '/reference-ril/d' hardware/ril/Android.mk 2>/dev/null || true
 
-# Remove from device tree if referenced
-sed -i '/reference-ril/d' $DEVICE_DIR/*.mk 2>/dev/null || true
+# Kill from ALL device/vendor trees (strong)
+grep -rl "reference-ril" device/ vendor/ 2>/dev/null | xargs -r sed -i '/reference-ril/d'
 
-echo "✅ reference-ril removed"
+echo "✅ reference-ril fully removed from build graph"
 # =========================================
 # 4. CREATE RIL STUB
 # =========================================
