@@ -263,6 +263,6 @@ echo "☕ Forcing Java 8 (hard override)..."
 # build
 export _JAVA_OPTIONS="-Xmx2g"
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make bacon -j3 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make bacon -j2 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
