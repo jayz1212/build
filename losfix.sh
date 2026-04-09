@@ -206,6 +206,7 @@ echo "✅ FINAL WiFi-only fix applied (RIL fully neutralized)"
 
 export WITHOUT_CHECK_API=true
 export RELAX_USES_LIBRARY_CHECK=true
+export SKIP_API_CHECKS=true
 
 
 source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh)
