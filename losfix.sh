@@ -208,7 +208,7 @@ export WITHOUT_CHECK_API=true
 export RELAX_USES_LIBRARY_CHECK=true
 
 
-source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh | bash)
+source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh)
 
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
 export PATH=$JAVA_HOME/bin:$PATH
