@@ -261,8 +261,8 @@ echo "☕ Forcing Java 8 (hard override)..."
 # rm -rf out/soong/.intermediates/libcore
 # rm -rf out/soong/.intermediates/frameworks/base/api*
 # build
-export _JAVA_OPTIONS="-Xmx2g"
+#export _JAVA_OPTIONS="-Xmx2g"
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make bacon -j1 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make bacon 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
