@@ -123,7 +123,7 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 
 info "Starting build (mka bacon)..."
-mka bacon -j4 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
+mka framework -j4 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 BUILD_EXIT=$?
 if [[ $BUILD_EXIT -eq 0 ]]; then
