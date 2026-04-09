@@ -10,7 +10,8 @@
 # =============================================================================
 
 set +euo pipefail
-
+rm -rf frameworks/base
+repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 DRY_RUN=false
 DEVICE="a5ltechn"
 
