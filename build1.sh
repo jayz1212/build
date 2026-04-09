@@ -102,8 +102,8 @@ rm -rf out/soong/.intermediates/frameworks/base
 rm -rf out/soong/.intermediates/libcore
 rm -rf out/soong/.intermediates/frameworks/base/api*
 # build
-make clean
+export _JAVA_OPTIONS="-Xmx2g"
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make framework -j3 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make framework -j2 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
