@@ -104,6 +104,6 @@ rm -rf out/soong/.intermediates/frameworks/base/api*
 # build
 make clean
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make framework -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make framework -j6 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
