@@ -104,7 +104,7 @@ info "Running breakfast for device: ${DEVICE}"
 breakfast "${DEVICE}"
 
 info "Starting build (mka bacon)..."
-mka framework
+mka framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 BUILD_EXIT=$?
 if [[ $BUILD_EXIT -eq 0 ]]; then
