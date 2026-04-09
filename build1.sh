@@ -67,7 +67,7 @@ export BUILD_BROKEN_MISSING_API_CHECKS=true
 
 
 
-source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh)
+#source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh)
 
 # curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
 
@@ -97,13 +97,13 @@ echo "☕ Forcing Java 8 (hard override)..."
 # java -version
 
 # CLEAN AFTER FIX
-rm -rf out/soong/.intermediates
-rm -rf out/soong/.intermediates/frameworks/base
-rm -rf out/soong/.intermediates/libcore
-rm -rf out/soong/.intermediates/frameworks/base/api*
+# rm -rf out/soong/.intermediates
+# rm -rf out/soong/.intermediates/frameworks/base
+# rm -rf out/soong/.intermediates/libcore
+# rm -rf out/soong/.intermediates/frameworks/base/api*
 # build
 export _JAVA_OPTIONS="-Xmx2g"
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make framework -j2 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make framework -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
