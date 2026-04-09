@@ -116,6 +116,11 @@ info "Running breakfast for device: ${DEVICE}"
 breakfast "${DEVICE}"
 
 
+source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh)
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
+export PATH=$JAVA_HOME/bin:$PATH
+
 
 info "Starting build (mka bacon)..."
 mka framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
@@ -127,3 +132,5 @@ else
   error "Build failed with exit code ${BUILD_EXIT}. Check output above."
   exit $BUILD_EXIT
 fi
+
+java -version
