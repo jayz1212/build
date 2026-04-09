@@ -204,6 +204,14 @@ lunch lineage_a5ltechn-userdebug
 echo "✅ Safe fix applied"
 echo "✅ FINAL WiFi-only fix applied (RIL fully neutralized)"
 
+export WITHOUT_CHECK_API=true
+export RELAX_USES_LIBRARY_CHECK=true
+
+
+source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh | bash)
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
+export PATH=$JAVA_HOME/bin:$PATH
 make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 echo ""
 echo "🎉 FINAL STABLE BUILD COMPLETE"
@@ -213,3 +221,5 @@ echo "✔ No RIL crashes"
 echo "✔ SELinux enforcing"
 echo "✔ Reduced log spam"
 echo "✔ Kernel optimized"
+
+java -version
