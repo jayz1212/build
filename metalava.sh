@@ -10,7 +10,8 @@
 # Default device: a5ltechn
 # =============================================================================
 
-set -uo pipefail   # no -e so build errors surface naturally
+# NOTE: intentionally NO set -u — LineageOS envsetup.sh uses unbound variables
+set -eo pipefail
 
 DRY_RUN=false
 DEVICE="a5ltechn"
@@ -95,15 +96,15 @@ if $DRY_RUN; then
 fi
 
 info "Setting up build environment..."
-set +u
+# Source without any strict mode — LineageOS scripts rely on unbound variables
+set +euo pipefail
 source build/envsetup.sh
-set -u
 
 info "Running breakfast for device: ${DEVICE}"
 breakfast "${DEVICE}"
 
 info "Starting build (mka bacon)..."
-mka framework -j8
+mka framework
 
 BUILD_EXIT=$?
 if [[ $BUILD_EXIT -eq 0 ]]; then
@@ -112,11 +113,3 @@ else
   error "Build failed with exit code ${BUILD_EXIT}. Check output above."
   exit $BUILD_EXIT
 fi
-
-
-
-# source build/envsetup.sh
-# lunch lineage_a5ltechn-userdebug
-# make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
-
-#bash -c "source build/envsetup.sh && lunch lineage_a5ltechn-userdebugn && make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload"
