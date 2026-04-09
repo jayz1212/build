@@ -122,6 +122,8 @@ warn "not an error). This is correct for an UNOFFICIAL build — all ~700 affect
 warn "APIs are stock AOSP Android 10 APIs, not missing system-API annotations."
 
 
-source build/envsetup.sh
-lunch lineage_a5ltechn-userdebug
-make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
+# source build/envsetup.sh
+# lunch lineage_a5ltechn-userdebug
+# make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
+
+bash -c "source build/envsetup.sh && lunch lineage_a5ltechn-userdebugn && make framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload"
