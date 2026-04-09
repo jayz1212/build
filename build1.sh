@@ -26,7 +26,7 @@ sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' 
 
 
 
-curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
+#curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
 
 
 # export ARCH=arm
@@ -75,9 +75,168 @@ wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2_a
 wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2_amd64.deb && sudo dpkg -i libncurses5_6.3-2_amd64.deb && rm -f libncurses5_6.3-2_amd64.deb
 
 
-source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/4ff76f942afb63b356034ad5e4068bb41d7781c8/fixsap.sh)
+#source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/4ff76f942afb63b356034ad5e4068bb41d7781c8/fixsap.sh)
 #source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh | bash)
+set -e
 
+echo "⚙️ Applying FINAL WiFi-only fix (FULL PATCH)"
+
+ANDROID_DIR="/tmp/src/android"
+DEVICE="a5ltechn"
+
+cd "$ANDROID_DIR"
+
+# =========================================
+# 1. REMOVE SAMSUNG RIL
+# =========================================
+echo "📡 Removing Samsung RIL..."
+rm -rf hardware/samsung/ril
+
+# =========================================
+# 2. PATCH SAMSUNG ANDROID.MK
+# =========================================
+echo "🔧 Patching hardware/samsung/Android.mk..."
+
+SMK="hardware/samsung/Android.mk"
+
+if [ -f "$SMK" ]; then
+  cp "$SMK" "${SMK}.bak"
+
+  sed -i '/hardware\/samsung\/ril/d' "$SMK"
+  sed -i '/\/ril\//d' "$SMK"
+  sed -i '/\bril\b/d' "$SMK"
+fi
+
+# =========================================
+# 3. FORCE REMOVE RILD (NUCLEAR FIX)
+# =========================================
+echo "💥 Force removing rild completely..."
+
+# Delete rild source entirely
+rm -rf hardware/ril/rild
+
+# Break any reference in Android.bp
+if [ -f hardware/ril/Android.bp ]; then
+  sed -i '/rild/d' hardware/ril/Android.bp
+fi
+
+# Break any reference in Android.mk
+sed -i '/rild/d' hardware/ril/Android.mk 2>/dev/null || true
+
+# Remove from device tree
+DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
+sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
+
+# Remove from init scripts
+find $DEVICE_DIR -name "*.rc" -exec sed -i '/rild/d' {} +
+find $DEVICE_DIR -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
+
+echo "✅ rild completely removed from build graph"
+
+
+
+# =========================================
+# 4. FORCE DISABLE reference-ril (REAL FIX)
+# =========================================
+echo "💥 Force disabling reference-ril..."
+
+# Remove source
+rm -rf hardware/ril/reference-ril
+
+# Kill module in Android.bp (important)
+if [ -f hardware/ril/Android.bp ]; then
+  sed -i 's/name: "reference-ril"/name: "reference-ril_disabled"/g' hardware/ril/Android.bp
+  sed -i '/reference-ril/d' hardware/ril/Android.bp
+fi
+
+# Kill from Android.mk
+sed -i '/reference-ril/d' hardware/ril/Android.mk 2>/dev/null || true
+
+# Kill from ALL device/vendor trees (strong)
+grep -rl "reference-ril" device/ vendor/ 2>/dev/null | xargs -r sed -i '/reference-ril/d'
+
+echo "✅ reference-ril fully removed from build graph"
+# =========================================
+# 4. CREATE RIL STUB
+# =========================================
+echo "🧱 Creating RIL stub..."
+
+mkdir -p hardware/ril_stub
+
+cat > hardware/ril_stub/ril.cpp <<'EOF'
+#include <telephony/ril.h>
+
+extern "C" {
+
+const RIL_RadioFunctions* RIL_Init(const struct RIL_Env* env,
+                                   int argc, char** argv) {
+    return nullptr;
+}
+
+void RIL_SAP_Init(const struct RIL_Env* env, int argc, char** argv) {}
+
+}
+EOF
+
+cat > hardware/ril_stub/Android.bp <<'EOF'
+cc_library_shared {
+    name: "libril",
+    srcs: ["ril.cpp"],
+    shared_libs: ["liblog", "libcutils"],
+    cflags: ["-Wno-unused-parameter"],
+}
+EOF
+
+# =========================================
+# 5. PATCH DEVICE TREE
+# =========================================
+echo "📱 Patching device tree..."
+
+DEVICE_DIR=$(find device -type d -name "*$DEVICE*" | head -n 1)
+
+# clean old entries
+sed -i '/libril/d' $DEVICE_DIR/*.mk 2>/dev/null || true
+sed -i '/rild/d' $DEVICE_DIR/*.mk 2>/dev/null || true
+
+# add WiFi-only config
+grep -q "ro.radio.noril" "$DEVICE_DIR/device.mk" || cat >> "$DEVICE_DIR/device.mk" <<EOF
+
+# WiFi-only config
+PRODUCT_PROPERTY_OVERRIDES += \\
+    ro.radio.noril=true
+
+PRODUCT_PACKAGES += \\
+    TelephonyProviderStub \\
+    libril
+EOF
+
+# board config
+grep -q "TARGET_NO_TELEPHONY" "$DEVICE_DIR/BoardConfig.mk" || cat >> "$DEVICE_DIR/BoardConfig.mk" <<EOF
+
+TARGET_NO_TELEPHONY := true
+TARGET_NO_RADIOIMAGE := true
+BOARD_PROVIDES_LIBRIL := true
+EOF
+
+# =========================================
+# 6. DISABLE RIL SERVICES (INIT)
+# =========================================
+echo "🔧 Disabling RIL services..."
+
+find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/rild/d' {} +
+find "$DEVICE_DIR" -name "*.rc" -exec sed -i '/ril-daemon/d' {} +
+
+# =========================================
+# 7. CLEAN RIL ARTIFACTS
+# =========================================
+echo "🧹 Cleaning RIL leftovers..."
+
+rm -rf out/target/product/*/obj/*ril*
+rm -rf out/soong/.intermediates/*ril*
+
+
+echo "✅ FINAL WiFi-only fix applied"
+cd /tmp/src/android
 
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
@@ -104,6 +263,6 @@ echo "☕ Forcing Java 8 (hard override)..."
 # build
 export _JAVA_OPTIONS="-Xmx2g"
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make framework -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make framework -j3 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
