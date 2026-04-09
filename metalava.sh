@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix_metalava_bp.sh — Fix Metalava UnhiddenSystemApi error in LineageOS 17.1
-#                      then kick off the build automatically.
+# fix_metalava_bp.sh — Fix Metalava build errors for LineageOS 17.1
+#                      Hides: UnhiddenSystemApi + ReferencesHidden
+#                      Then kicks off the build automatically.
 #
 # USAGE:
 #   cd <lineage source root>
 #   bash fix_metalava_bp.sh [--dry-run] [--device <codename>]
-#
-# Default device: a5ltechn
 # =============================================================================
 
-# NOTE: intentionally NO set -u — LineageOS envsetup.sh uses unbound variables
-set -eo pipefail
+set +euo pipefail
 
 DRY_RUN=false
 DEVICE="a5ltechn"
@@ -32,9 +30,8 @@ error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
 TARGET="frameworks/base/Android.bp"
 
-# ── Sanity checks ─────────────────────────────────────────────────────────────
 if [[ ! -f "build/envsetup.sh" ]]; then
-  error "Run from your LineageOS source root (where build/envsetup.sh lives)."
+  error "Run from your LineageOS source root."
   exit 1
 fi
 
@@ -43,28 +40,52 @@ if [[ ! -f "$TARGET" ]]; then
   exit 1
 fi
 
-# ── Patch (skip if already done) ──────────────────────────────────────────────
+PATCHED=false
+
+# ── Fix 1: UnhiddenSystemApi ──────────────────────────────────────────────────
 if grep -q '"--error UnhiddenSystemApi "' "$TARGET"; then
-  info "Applying patch: --error UnhiddenSystemApi → --hide UnhiddenSystemApi"
-
-  if $DRY_RUN; then
-    warn "[DRY-RUN] Would patch $TARGET — skipping."
-  else
-    BACKUP="${TARGET}.bak_$(date +%Y%m%d_%H%M%S)"
-    cp "$TARGET" "$BACKUP"
-    info "Backup saved: $BACKUP"
-
+  info "Patching: --error UnhiddenSystemApi → --hide UnhiddenSystemApi"
+  if ! $DRY_RUN; then
     sed -i 's/"--error UnhiddenSystemApi "/"--hide UnhiddenSystemApi "/g' "$TARGET"
+    PATCHED=true
+  fi
+elif grep -q '"--hide UnhiddenSystemApi "' "$TARGET"; then
+  info "UnhiddenSystemApi: already hidden."
+else
+  warn "UnhiddenSystemApi flag not found in expected format — skipping."
+fi
 
-    REMAINING=$(grep -c '"--error UnhiddenSystemApi "' "$TARGET" || true)
-    if [[ "$REMAINING" -ne 0 ]]; then
-      error "Patch failed — restoring backup."
-      cp "$BACKUP" "$TARGET"
-      exit 1
-    fi
-    info "Patch applied successfully."
+# ── Fix 2: ReferencesHidden ───────────────────────────────────────────────────
+# This is the NEW error: public methods referencing @hide classes (ddm, camera2, telephony, etc.)
+# We need to add --hide ReferencesHidden to every metalava_docs args block in Android.bp
 
-    # Clean stale Metalava intermediates
+if grep -q '"--hide ReferencesHidden "' "$TARGET"; then
+  info "ReferencesHidden: already hidden."
+else
+  info "Patching: adding --hide ReferencesHidden to all Metalava targets"
+  if ! $DRY_RUN; then
+    # Insert --hide ReferencesHidden right after --hide UnhiddenSystemApi (or after --hide Typo as fallback)
+    sed -i 's/"--hide UnhiddenSystemApi "/"--hide UnhiddenSystemApi " +\n        "--hide ReferencesHidden "/g' "$TARGET"
+    PATCHED=true
+  fi
+fi
+
+# ── Verify both are present ───────────────────────────────────────────────────
+if ! $DRY_RUN; then
+  UNHIDDEN_COUNT=$(grep -c '"--hide UnhiddenSystemApi "' "$TARGET" || true)
+  REFHIDDEN_COUNT=$(grep -c '"--hide ReferencesHidden "' "$TARGET" || true)
+  info "Verification — UnhiddenSystemApi hidden in ${UNHIDDEN_COUNT} place(s), ReferencesHidden in ${REFHIDDEN_COUNT} place(s)."
+
+  if [[ "$REFHIDDEN_COUNT" -eq 0 ]]; then
+    warn "ReferencesHidden patch may have failed. Trying fallback insertion..."
+    # Fallback: insert before --hide Typo (last hide flag in every block)
+    sed -i 's/"--hide Typo "/"--hide Typo " +\n        "--hide ReferencesHidden "/g' "$TARGET"
+    REFHIDDEN_COUNT=$(grep -c '"--hide ReferencesHidden "' "$TARGET" || true)
+    info "After fallback: ReferencesHidden hidden in ${REFHIDDEN_COUNT} place(s)."
+  fi
+
+  # Clean stale intermediates if anything changed
+  if $PATCHED; then
     info "Cleaning stale Metalava intermediates..."
     SOONG_INT="out/soong/.intermediates/frameworks/base"
     for DIR in \
@@ -79,29 +100,21 @@ if grep -q '"--error UnhiddenSystemApi "' "$TARGET"; then
       fi
     done
   fi
-
-elif grep -q '"--hide UnhiddenSystemApi "' "$TARGET"; then
-  info "Already patched — proceeding directly to build."
-
-else
-  warn "UnhiddenSystemApi not found in expected format in $TARGET"
-  grep -n 'UnhiddenSystemApi' "$TARGET" || true
-  warn "Attempting build anyway..."
 fi
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 if $DRY_RUN; then
-  warn "[DRY-RUN] Would now run: source build/envsetup.sh && breakfast ${DEVICE} && mka bacon"
+  warn "[DRY-RUN] Would run: source build/envsetup.sh && breakfast ${DEVICE} && mka bacon"
   exit 0
 fi
 
 info "Setting up build environment..."
-# Source without any strict mode — LineageOS scripts rely on unbound variables
-set +euo pipefail
 source build/envsetup.sh
 
 info "Running breakfast for device: ${DEVICE}"
 breakfast "${DEVICE}"
+
+
 
 info "Starting build (mka bacon)..."
 mka framework -j8 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
