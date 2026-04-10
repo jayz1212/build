@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 rm -rf device/samsung
 ##set -e
-
+sudo apt update
+sudo apt install openjdk-8-jdk
 # ===== CONFIG =====
 TWRP_BRANCH="twrp-11"
 DEVICE="a5ltechn"
