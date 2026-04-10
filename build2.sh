@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+##set -e
 
 # ===== CONFIG =====
 TWRP_BRANCH="twrp-11"
