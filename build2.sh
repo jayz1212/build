@@ -45,10 +45,11 @@ echo
 echo "⚙️ Setting up build environment..."
 source build/envsetup.sh
 
-
+wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2_amd64.deb && sudo dpkg -i libtinfo5_6.3-2_amd64.deb && rm -f libtinfo5_6.3-2_amd64.deb
+wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2_amd64.deb && sudo dpkg -i libncurses5_6.3-2_amd64.deb && rm -f libncurses5_6.3-2_amd64.deb
 
 #git clone --depth=1 https://github.com/omnirom/android_vendor_omni -b android-10 vendor/omni
-lunch omni_${DEVICE}-eng
+lunch omni_a5ltechn-eng
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
 unset JAVA_HOME
