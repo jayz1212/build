@@ -38,7 +38,10 @@ echo "✅ Cloning done!"
 echo
 sed -i 's|vendor/omni/config/common.mk|vendor/twrp/config/common.mk|g' device/samsung/a5-common/*.mk
 sed -i 's|$(call inherit-product, vendor/omni/config/gsm.mk)||g' device/samsung/a5-common/*.mk
-
+cat > device/samsung/a5-common/board/display.mk << 'EOF'
+# Screen density
+# handled by build system
+EOF
 # ===== BUILD ENV =====
 echo "⚙️ Setting up build environment..."
 source build/envsetup.sh
