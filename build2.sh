@@ -158,7 +158,7 @@ echo "✅ Advanced fixes applied"
 
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
-mka recoveryimage -j$JOBS
+mka recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 # ===== DONE =====
 echo
