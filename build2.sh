@@ -30,12 +30,14 @@ repo sync -c -j64 --force-sync --no-clone-bundle --no-tags
 echo "📦 Cloning device trees..."
 
 
-git clone https://github.com/Galaxy-MSM8916/android_device_samsung_a5ltechn -b lineage-17.1 device/samsung/a5ltechn
+git clone --depth=1 https://github.com/Galaxy-MSM8916/android_device_samsung_a5ltechn -b lineage-17.1 device/samsung/a5ltechn
 git clone https://github.com/Galaxy-MSM8916/android_device_samsung_a5-common -b lineage-16.0 device/samsung/a5-common
-
-
+git clone --depth=1 https://github.com/Galaxy-MSM8916/android_device_samsung_msm8916-common -b lineage-17.1 device/samsung/msm8916-common
+git clone --depth=1 https://github.com/LineageOS/android_device_samsung_qcom-common -b lineage-17.1 device/samsung/qcom-common
 echo "✅ Cloning done!"
 echo
+sed -i 's|vendor/omni/config/common.mk|vendor/twrp/config/common.mk|g' device/samsung/a5-common/*.mk
+sed -i 's|$(call inherit-product, vendor/omni/config/gsm.mk)||g' device/samsung/a5-common/*.mk
 
 # ===== BUILD ENV =====
 echo "⚙️ Setting up build environment..."
@@ -246,7 +248,7 @@ echo "lunch omni_${DEVICE}-eng"
 echo "mka recoveryimage"
 echo
 
-git clone https://github.com/omnirom/android_vendor_omni -b android-10 vendor/omni
+#git clone --depth=1 https://github.com/omnirom/android_vendor_omni -b android-10 vendor/omni
 lunch omni_${DEVICE}-eng
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
