@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+rm -rf device/samsung
 ##set -e
 
 # ===== CONFIG =====
@@ -29,16 +29,10 @@ repo sync -c -j64 --force-sync --no-clone-bundle --no-tags
 # ===== CLONE DEVICE TREES =====
 echo "📦 Cloning device trees..."
 
-git clone -b lineage-17.1 https://github.com/LightningFastDevices/android_device_samsung_a5ltechn device/samsung/a5ltechn
-git clone -b lineage-17.1 https://github.com/LightningFastDevices/android_device_samsung_a5-common device/samsung/a5-common
-git clone -b lineage-17.1 https://github.com/LightningFastDevices/android_device_samsung_msm8916-common device/samsung/msm8916-common
-git clone -b lineage-17.1 https://github.com/enrico-mo/android_device_samsung_qcom-common device/samsung/qcom-common
 
-git clone -b lineage-17.1 https://github.com/LightningFastDevices/proprietary_vendor_samsung vendor/samsung
+git clone https://github.com/Galaxy-MSM8916/android_device_samsung_a5ltechn -b lineage-17.1 device/samsung/a5ltechn
+git clone https://github.com/Galaxy-MSM8916/android_device_samsung_a5-common -b lineage-16.0 device/samsung/a5-common
 
-git clone -b lineage-17.1 https://github.com/Galaxy-MSM8916/android_kernel_samsung_msm8916 kernel/samsung/msm8916
-
-git clone -b lineage-17.1 https://github.com/LineageOS/android_hardware_samsung hardware/samsung
 
 echo "✅ Cloning done!"
 echo
@@ -268,5 +262,5 @@ echo "out/target/product/${DEVICE}/recovery.img"
 echo "======================================="
 # ===== LUNCH =====
 echo "🍱 Lunching device..."
-lunch lineage_${DEVICE}-eng
+lunch omni_${DEVICE}-eng
 
