@@ -49,7 +49,7 @@ source build/envsetup.sh
 
 # ===== LUNCH =====
 echo "🍱 Lunching device..."
-lunch omni_${DEVICE}-eng
+lunch lineage_${DEVICE}-eng
 
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
