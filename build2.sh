@@ -18,12 +18,13 @@ echo
 # ===== INIT TWRP SOURCE =====
 if [ ! -d ".repo" ]; then
     echo "📥 Initializing TWRP source..."
-    repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b $TWRP_BRANCH
+    repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b $TWRP_BRANCH --depth=1
 fi
 
 # ===== SYNC =====
 echo "🔄 Syncing source..."
-repo sync -j$JOBS --force-sync
+repo sync -c -j64 --force-sync --no-clone-bundle --no-tags
+/opt/crave/resync.sh
 
 # ===== CLONE DEVICE TREES =====
 echo "📦 Cloning device trees..."
