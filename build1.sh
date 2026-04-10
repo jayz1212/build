@@ -67,7 +67,7 @@ export BUILD_BROKEN_MISSING_API_CHECKS=true
 
 
 
-#source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh)
+source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh)
 
 # curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
 
