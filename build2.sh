@@ -134,6 +134,27 @@ echo "mka recoveryimage"
 echo
 
 
+echo "🔧 Applying advanced MSM8916 fixes..."
+
+# Disable VTS garbage
+find hardware interfaces vendor -name "*.bp" -exec sed -i \
+'/vts/d' {} + 2>/dev/null || true
+
+# Allow missing deps
+grep -q ALLOW_MISSING_DEPENDENCIES $BOARD_CONFIG || \
+echo "ALLOW_MISSING_DEPENDENCIES := true" >> $BOARD_CONFIG
+
+grep -q BUILD_BROKEN_VINTF_PRODUCT_COPY_FILES $BOARD_CONFIG || \
+echo "BUILD_BROKEN_VINTF_PRODUCT_COPY_FILES := true" >> $BOARD_CONFIG
+
+# Fix missing splash
+mkdir -p bootable/recovery/gui/theme/common
+echo '<?xml version="1.0"?><splash></splash>' > bootable/recovery/gui/theme/common/splash.xml
+
+echo "✅ Advanced fixes applied"
+
+
+
 
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
