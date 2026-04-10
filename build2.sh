@@ -18,7 +18,7 @@ echo
 # ===== INIT TWRP SOURCE =====
 if [ ! -d ".repo" ]; then
     echo "📥 Initializing TWRP source..."
-   repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-9.0
+   repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-7.1
 fi
 
 # ===== SYNC =====
@@ -30,10 +30,8 @@ repo sync -c -j64 --force-sync --no-clone-bundle --no-tags
 echo "📦 Cloning device trees..."
 
 
-git clone --depth=1 https://github.com/Galaxy-MSM8916/android_device_samsung_a5ltechn -b lineage-17.1 device/samsung/a5ltechn
-git clone https://github.com/Galaxy-MSM8916/android_device_samsung_a5-common -b lineage-16.0 device/samsung/a5-common
-git clone --depth=1 https://github.com/Galaxy-MSM8916/android_device_samsung_msm8916-common -b lineage-17.1 device/samsung/msm8916-common
-git clone --depth=1 https://github.com/LineageOS/android_device_samsung_qcom-common -b lineage-17.1 device/samsung/qcom-common
+git clone --depth=1 https://github.com/xc112lg/android_device_samsung_a5ltechn -b main device/samsung/a5ltechn
+
 echo "✅ Cloning done!"
 echo
 # sed -i 's|vendor/omni/config/common.mk|vendor/twrp/config/common.mk|g' device/samsung/a5-common/*.mk
