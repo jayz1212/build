@@ -134,24 +134,123 @@ echo "mka recoveryimage"
 echo
 
 
-echo "🔧 Applying advanced MSM8916 fixes..."
+#!/usr/bin/env bash
 
-# Disable VTS garbage
-find hardware interfaces vendor -name "*.bp" -exec sed -i \
-'/vts/d' {} + 2>/dev/null || true
+set -e
 
-# Allow missing deps
-grep -q ALLOW_MISSING_DEPENDENCIES $BOARD_CONFIG || \
-echo "ALLOW_MISSING_DEPENDENCIES := true" >> $BOARD_CONFIG
+DEVICE="a5ltechn"
+DEVICE_PATH="device/samsung/$DEVICE"
+BOARD_CONFIG="$DEVICE_PATH/BoardConfig.mk"
+FSTAB="$DEVICE_PATH/recovery.fstab"
 
-grep -q BUILD_BROKEN_VINTF_PRODUCT_COPY_FILES $BOARD_CONFIG || \
-echo "BUILD_BROKEN_VINTF_PRODUCT_COPY_FILES := true" >> $BOARD_CONFIG
+echo "======================================="
+echo " MSM8916 TWRP FULL AUTO PATCH"
+echo "======================================="
+echo
 
-# Fix missing splash
+# ===== Helper =====
+add_or_replace() {
+    local KEY="$1"
+    local VALUE="$2"
+
+    if grep -q "^$KEY" "$BOARD_CONFIG"; then
+        sed -i "s|^$KEY.*|$KEY := $VALUE|" "$BOARD_CONFIG"
+        echo "🔁 Updated: $KEY"
+    else
+        echo "$KEY := $VALUE" >> "$BOARD_CONFIG"
+        echo "➕ Added: $KEY"
+    fi
+}
+
+echo "📦 Patching BoardConfig.mk..."
+
+# ===== Core TWRP =====
+add_or_replace TW_THEME portrait_hdpi
+add_or_replace RECOVERY_VARIANT twrp
+add_or_replace TW_EXTRA_LANGUAGES true
+add_or_replace TW_SCREEN_BLANK_ON_BOOT true
+
+# ===== Display fix =====
+add_or_replace TARGET_RECOVERY_PIXEL_FORMAT RGBX_8888
+
+# ===== Crypto =====
+add_or_replace TW_INCLUDE_CRYPTO true
+add_or_replace TW_INCLUDE_FBE true
+add_or_replace TW_USE_FSCRYPT_POLICY 1
+
+# ===== Storage =====
+add_or_replace TW_HAS_MTP true
+add_or_replace TW_EXCLUDE_DEFAULT_USB_INIT true
+
+# ===== Build fixes =====
+add_or_replace ALLOW_MISSING_DEPENDENCIES true
+add_or_replace BUILD_BROKEN_VINTF_PRODUCT_COPY_FILES true
+
+# ===== SELinux permissive =====
+if grep -q "BOARD_KERNEL_CMDLINE" "$BOARD_CONFIG"; then
+    if ! grep -q "androidboot.selinux=permissive" "$BOARD_CONFIG"; then
+        sed -i 's|BOARD_KERNEL_CMDLINE *= *"|&androidboot.selinux=permissive |' "$BOARD_CONFIG"
+        echo "➕ Added SELinux permissive"
+    fi
+else
+    echo 'BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive' >> "$BOARD_CONFIG"
+    echo "➕ Created BOARD_KERNEL_CMDLINE"
+fi
+
+echo
+
+# ===== Fix missing splash.xml =====
+echo "🎨 Fixing missing splash.xml..."
+
 mkdir -p bootable/recovery/gui/theme/common
-echo '<?xml version="1.0"?><splash></splash>' > bootable/recovery/gui/theme/common/splash.xml
 
-echo "✅ Advanced fixes applied"
+cat > bootable/recovery/gui/theme/common/splash.xml <<EOF
+<?xml version="1.0"?>
+<splash>
+    <image resource="splash" />
+</splash>
+EOF
+
+echo "✔ splash.xml created"
+
+echo
+
+# ===== REMOVE VTS / TEST / FUZZER =====
+echo "🧹 Removing VTS / test modules..."
+
+find hardware/interfaces -type d \( -name "vts" -o -name "tests" -o -name "fuzzer" \) -exec rm -rf {} + 2>/dev/null || true
+find vendor -type d \( -name "vts" -o -name "tests" -o -name "fuzzer" \) -exec rm -rf {} + 2>/dev/null || true
+
+echo "✔ VTS removed"
+
+echo
+
+# ===== Optional fstab patch =====
+echo "📂 Checking recovery.fstab..."
+
+if [ -f "$FSTAB" ]; then
+    sed -i 's|/data[[:space:]]\+ext4|/data ext4 flags=encryptable=footer|' "$FSTAB" || true
+    echo "✔ fstab patched"
+else
+    echo "⚠️ recovery.fstab not found (skipped)"
+fi
+
+echo
+
+# ===== Permissions =====
+chmod -R u+rw "$DEVICE_PATH"
+
+echo
+echo "======================================="
+echo "✅ ALL PATCHES APPLIED SUCCESSFULLY"
+echo "======================================="
+echo
+echo "Next:"
+echo "export ALLOW_MISSING_DEPENDENCIES=true"
+echo "source build/envsetup.sh"
+echo "lunch omni_${DEVICE}-eng"
+echo "mka recoveryimage"
+echo
 
 
 
