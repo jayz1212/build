@@ -3,7 +3,7 @@
 set -e
 
 # ===== CONFIG =====
-TWRP_BRANCH="twrp-10.0"
+TWRP_BRANCH="twrp-11"
 DEVICE="a5ltechn"
 JOBS=$(nproc --all)
 
