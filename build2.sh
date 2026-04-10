@@ -51,9 +51,11 @@ source build/envsetup.sh
 lunch omni_${DEVICE}-eng
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
+unset JAVA_HOME
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
-jave -version
+java -version
+sleep 10
 mka recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 # ===== DONE =====
