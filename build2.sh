@@ -246,9 +246,8 @@ echo "lunch omni_${DEVICE}-eng"
 echo "mka recoveryimage"
 echo
 
-
-
-
+git clone https://github.com/omnirom/android_vendor_omni -b android-10 vendor/omni
+lunch omni_${DEVICE}-eng
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
 mka recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
@@ -262,5 +261,5 @@ echo "out/target/product/${DEVICE}/recovery.img"
 echo "======================================="
 # ===== LUNCH =====
 echo "🍱 Lunching device..."
-lunch omni_${DEVICE}-eng
+
 
