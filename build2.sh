@@ -51,6 +51,94 @@ source build/envsetup.sh
 echo "🍱 Lunching device..."
 lunch lineage_${DEVICE}-eng
 
+#!/usr/bin/env bash
+
+set -e
+
+DEVICE_PATH="device/samsung/a5ltechn"
+BOARD_CONFIG="$DEVICE_PATH/BoardConfig.mk"
+FSTAB="$DEVICE_PATH/recovery.fstab"
+
+echo "======================================="
+echo " MSM8916 TWRP Auto Patch Script"
+echo "======================================="
+echo
+
+# ===== Helper function =====
+add_or_replace() {
+    local KEY="$1"
+    local VALUE="$2"
+
+    if grep -q "^$KEY" "$BOARD_CONFIG"; then
+        sed -i "s|^$KEY.*|$KEY := $VALUE|" "$BOARD_CONFIG"
+        echo "🔁 Updated: $KEY"
+    else
+        echo "$KEY := $VALUE" >> "$BOARD_CONFIG"
+        echo "➕ Added: $KEY"
+    fi
+}
+
+echo "📦 Patching BoardConfig.mk..."
+
+# ===== Core TWRP flags =====
+add_or_replace TW_THEME portrait_hdpi
+add_or_replace RECOVERY_VARIANT twrp
+add_or_replace TW_EXTRA_LANGUAGES true
+add_or_replace TW_SCREEN_BLANK_ON_BOOT true
+
+# ===== Display fix =====
+add_or_replace TARGET_RECOVERY_PIXEL_FORMAT RGBX_8888
+
+# ===== Crypto (Android 10 / TWRP 11) =====
+add_or_replace TW_INCLUDE_CRYPTO true
+add_or_replace TW_INCLUDE_FBE true
+add_or_replace TW_USE_FSCRYPT_POLICY 1
+
+# ===== Storage / mounting =====
+add_or_replace TW_HAS_MTP true
+add_or_replace TW_EXCLUDE_DEFAULT_USB_INIT true
+
+# ===== SELinux permissive (boot fix) =====
+if grep -q "BOARD_KERNEL_CMDLINE" "$BOARD_CONFIG"; then
+    if ! grep -q "androidboot.selinux=permissive" "$BOARD_CONFIG"; then
+        sed -i 's|BOARD_KERNEL_CMDLINE *= *"|&androidboot.selinux=permissive |' "$BOARD_CONFIG"
+        echo "➕ Added SELinux permissive to cmdline"
+    fi
+else
+    echo 'BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive' >> "$BOARD_CONFIG"
+    echo "➕ Created BOARD_KERNEL_CMDLINE with permissive"
+fi
+
+echo
+
+# ===== fstab sanity fix =====
+echo "📂 Checking recovery.fstab..."
+
+if [ -f "$FSTAB" ]; then
+    sed -i 's|/data[[:space:]]\+ext4|/data ext4 flags=encryptable=footer|' "$FSTAB" || true
+    echo "✔ fstab basic crypto patch applied"
+else
+    echo "⚠️ recovery.fstab not found (skipped)"
+fi
+
+echo
+
+# ===== Permissions fix =====
+chmod -R u+rw "$DEVICE_PATH"
+
+echo
+echo "======================================="
+echo "✅ MSM8916 TWRP PATCH COMPLETE"
+echo "======================================="
+echo
+echo "Now run:"
+echo "source build/envsetup.sh"
+echo "lunch omni_a5ltechn-eng"
+echo "mka recoveryimage"
+echo
+
+
+
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
 mka recoveryimage -j$JOBS
