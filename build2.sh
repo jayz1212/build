@@ -18,7 +18,7 @@ echo
 # ===== INIT TWRP SOURCE =====
 if [ ! -d ".repo" ]; then
     echo "📥 Initializing TWRP source..."
-    repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b $TWRP_BRANCH --depth=1
+   repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-9.0
 fi
 
 # ===== SYNC =====
@@ -36,12 +36,12 @@ git clone --depth=1 https://github.com/Galaxy-MSM8916/android_device_samsung_msm
 git clone --depth=1 https://github.com/LineageOS/android_device_samsung_qcom-common -b lineage-17.1 device/samsung/qcom-common
 echo "✅ Cloning done!"
 echo
-sed -i 's|vendor/omni/config/common.mk|vendor/twrp/config/common.mk|g' device/samsung/a5-common/*.mk
-sed -i 's|$(call inherit-product, vendor/omni/config/gsm.mk)||g' device/samsung/a5-common/*.mk
-cat > device/samsung/a5-common/board/display.mk << 'EOF'
-# Screen density
-# handled by build system
-EOF
+# sed -i 's|vendor/omni/config/common.mk|vendor/twrp/config/common.mk|g' device/samsung/a5-common/*.mk
+# sed -i 's|$(call inherit-product, vendor/omni/config/gsm.mk)||g' device/samsung/a5-common/*.mk
+# cat > device/samsung/a5-common/board/display.mk << 'EOF'
+# # Screen density
+# # handled by build system
+# EOF
 # ===== BUILD ENV =====
 echo "⚙️ Setting up build environment..."
 source build/envsetup.sh
