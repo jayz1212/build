@@ -47,10 +47,6 @@ echo
 echo "⚙️ Setting up build environment..."
 source build/envsetup.sh
 
-# ===== LUNCH =====
-echo "🍱 Lunching device..."
-lunch lineage_${DEVICE}-eng
-
 #!/usr/bin/env bash
 
 set -e
@@ -150,3 +146,7 @@ echo "✅ BUILD COMPLETE!"
 echo "📍 Output:"
 echo "out/target/product/${DEVICE}/recovery.img"
 echo "======================================="
+# ===== LUNCH =====
+echo "🍱 Lunching device..."
+lunch lineage_${DEVICE}-eng
+
