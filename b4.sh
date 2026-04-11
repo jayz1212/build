@@ -369,6 +369,47 @@ export TW_THEME=portrait_hdpi
 # Use Python 2
 sudo update-alternatives --set python /usr/bin/python2 2>/dev/null
 
+
+
+
+##########################
+#!/bin/bash
+# fix_twrp_backspace.sh - Fix ^H issue in TWRP
+
+cd /tmp/src/android
+
+echo "========================================="
+echo "Fixing TWRP Backspace Key (^H issue)"
+echo "========================================="
+
+# Create keylayout directory
+mkdir -p device/samsung/a5ltechn/root/system/usr/keylayout
+
+# Create Generic.kl with backspace fix
+cat > device/samsung/a5ltechn/root/system/usr/keylayout/Generic.kl << 'EOF'
+# Generic key layout - Backspace/Delete fix
+key 14    DEL              WAKE_DROPPED
+key 158   BACK             WAKE_DROPPED
+key 139   MENU             WAKE_DROPPED
+key 102   HOME             WAKE_DROPPED
+key 115   VOLUME_UP        WAKE
+key 114   VOLUME_DOWN      WAKE
+key 116   POWER            WAKE
+EOF
+
+echo ""
+echo "========================================="
+echo "Fix applied successfully!"
+echo "========================================="
+echo ""
+echo "File created: device/samsung/a5ltechn/root/system/usr/keylayout/Generic.kl"
+echo ""
+echo "Rebuild recovery to include the fix:"
+echo "  source build/envsetup.sh"
+echo "  lunch omni_a5ltechn-eng"
+echo "  make recoveryimage"
+echo "========================================="
+###################
 # Clean previous build
 make clean
 
