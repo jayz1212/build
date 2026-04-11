@@ -1,61 +1,49 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/env python3
+#
+# Python3-safe version of check_radio_versions.py
+#
 
-echo "🔧 Starting Python compatibility fix..."
+import os
+import sys
 
-# 1. Install python2 if missing
-if ! command -v python2 >/dev/null 2>&1; then
-    echo "📦 Installing python2..."
-    sudo apt update
-    sudo apt install -y python2
-fi
+def check_file(fn, key, allowed):
+    try:
+        with open(fn + ".sha1", "r") as f:
+            version = f.read().strip()
+    except IOError:
+        print("*** Error opening \"%s.sha1\"; can't verify %s" % (fn, key))
+        return False
 
-# 2. Force python2 in environment
-echo "⚙️ Setting Python2 as default for build..."
-export PYTHON=python2
+    if not any(v in allowed for v in [version]):
+        print("*** \"%s\" is version %s; not any %s allowed by \"%s\"." %
+              (fn, version, allowed, key))
+        return False
 
-# Some builds call 'python' directly → override locally
-mkdir -p prebuilts/python-fix
-cat > prebuilts/python-fix/python << 'EOF'
-#!/usr/bin/env bash
-exec python2 "$@"
-EOF
-chmod +x prebuilts/python-fix/python
+    return True
 
-export PATH="$(pwd)/prebuilts/python-fix:$PATH"
 
-# 3. Fix known broken scripts safely (only simple print cases)
-echo "🩹 Patching known Python scripts..."
+def main():
+    # If no args, just exit clean (TWRP doesn't really need this)
+    if len(sys.argv) < 2:
+        return 0
 
-PATCHED=0
+    success = True
 
-fix_file() {
-    FILE="$1"
-    if [ -f "$FILE" ]; then
-        if grep -q 'print "' "$FILE"; then
-            echo "  ✔ Fixing $FILE"
-            sed -i -E 's/print "(.*)"/print("\1")/g' "$FILE"
-            PATCHED=$((PATCHED+1))
-        fi
-    fi
-}
+    for arg in sys.argv[1:]:
+        parts = arg.split("=")
+        if len(parts) != 2:
+            continue
 
-fix_file build/tools/check_radio_versions.py
+        key = parts[0]
+        allowed = parts[1].split(",")
 
-# 4. Optional: Fix other common legacy scripts (safe subset)
-find build/ -name "*.py" | while read -r f; do
-    if grep -q 'print "' "$f"; then
-        sed -i -E 's/print "(.*)"/print("\1")/g' "$f" || true
-    fi
-done
+        fn = os.path.join("radio", key)
 
-# 5. Clean conflicting python bytecode
-echo "🧹 Cleaning old .pyc files..."
-find . -name "*.pyc" -delete
+        if not check_file(fn, key, allowed):
+            success = False
 
-echo "✅ Done! Python compatibility layer ready."
-echo ""
-echo "👉 Now run:"
-echo "   source build/envsetup.sh"
-echo "   lunch lineage_a5ltechn-eng"
-echo "   make recoveryimage -j$(nproc)"
+    return 0 if success else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
