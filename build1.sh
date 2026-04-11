@@ -242,10 +242,10 @@ cd /tmp/src/android
 lunch lineage_a5ltechn-userdebug
 echo "☕ Forcing Java 8 (hard override)..."
 
-# JDK8="/usr/lib/jvm/java-8-openjdk"
+JDK8="/usr/lib/jvm/java-8-openjdk"
 
-# export JAVA_HOME="$JDK8"
-# export PATH="$JAVA_HOME/bin:$PATH"
+export JAVA_HOME="$JDK8"
+export PATH="$JAVA_HOME/bin:$PATH"
 
 # 🔥 HARD FIX
 # ln -sf $JDK8/bin/java prebuilts/jdk/jdk9/linux-x86/bin/java
