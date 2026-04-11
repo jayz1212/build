@@ -1,5 +1,5 @@
 export GH_TOKEN=$(cat gh_token.txt)
-
+git clone https://$GH_TOKEN@github.com//jayz1212/crdroid10.x
 cd /tmp/src/android/out/target/product/a5ltechn
 
 # Create tar.md5 for Odin
