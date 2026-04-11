@@ -49,7 +49,7 @@ wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2_a
 wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2_amd64.deb && sudo dpkg -i libncurses5_6.3-2_amd64.deb && rm -f libncurses5_6.3-2_amd64.deb
 
 #git clone --depth=1 https://github.com/omnirom/android_vendor_omni -b android-10 vendor/omni
-lunch omni_a5ltechn-eng
+
 # ===== BUILD =====
 echo "🛠️ Building TWRP..."
 
@@ -345,7 +345,7 @@ if [ -f "out/target/product/a5ltechn/recovery.img" ]; then
 fi
 
 
-chmod +x build_optimized.sh
+
 
 # 5. Show size comparison if old image exists
 print_status "Size analysis..."
@@ -357,17 +357,11 @@ else
     print_warning "No existing recovery image found"
 fi
 
-echo ""
+
 echo "========================================="
 echo "Compression setup complete!"
 echo "========================================="
-echo "To build optimized recovery:"
-echo "  ./build_optimized.sh"
-echo ""
-echo "Or manually:"
-echo "  source build/envsetup.sh"
-echo "  lunch omni_a5ltechn-eng"
-echo "  make recoveryimage"
+
 echo "========================================="
 ######################################################
 
