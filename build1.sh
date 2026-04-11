@@ -262,6 +262,8 @@ echo "☕ Forcing Java 8 (hard override)..."
 # rm -rf out/soong/.intermediates/frameworks/base/api*
 # build
 export _JAVA_OPTIONS="-Xmx2g"
+export KCONFIG_NOTIMESTAMP=true
+export KCONFIG_NOSILENTUPDATE=true
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 make bacon -j3 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
