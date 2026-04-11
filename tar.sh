@@ -18,7 +18,7 @@ tar -cvf recovery.tar recovery.img && md5sum -t recovery.tar >> recovery.tar && 
 
 
 echo "Created: recovery.tar.md5"
-
+cd -
 cp out/target/product/a5ltechn/recovery.tar.md5 crdroid10.x
 cd crdroid10.x
 chmod +x multi_upload.sh
