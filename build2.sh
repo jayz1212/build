@@ -87,6 +87,31 @@ export TARGET_SCREEN_HEIGHT=1280
 export TW_THEME=portrait_hdpi
 
 
+
+
+curl -sf https://raw.githubusercontent.com/jayz1212/build/3017f1ddde76a835b62ca9959e7c45e739a40a61/patch.sh | bash 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Find and patch BoardConfig.mk
 # BOARD_CONFIG=$(find device/ -name "BoardConfig.mk" -path "*/samsung/*" | head -1)
 # if [[ -f "$BOARD_CONFIG" ]]; then
