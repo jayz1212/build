@@ -121,7 +121,7 @@ curl -sf https://raw.githubusercontent.com/jayz1212/build/3017f1ddde76a835b62ca9
 #     echo "TARGET_SCREEN_WIDTH := 720" >> "$BOARD_CONFIG"
 #     echo "TARGET_SCREEN_HEIGHT := 1280" >> "$BOARD_CONFIG"
 #     echo "T
-
+make clean
 make recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 # ===== DONE =====
