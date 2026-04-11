@@ -60,6 +60,20 @@ sleep 10
 export LC_ALL=C
 export LANG=C
 export LANGUAGE=C
+export TARGET_SCREEN_WIDTH=720
+export TARGET_SCREEN_HEIGHT=1280
+export TW_THEME=portrait_hdpi
+
+# Find and patch BoardConfig.mk
+BOARD_CONFIG=$(find device/ -name "BoardConfig.mk" -path "*/samsung/*" | head -1)
+if [[ -f "$BOARD_CONFIG" ]]; then
+    sed -i '/TARGET_SCREEN_WIDTH/d' "$BOARD_CONFIG"
+    sed -i '/TARGET_SCREEN_HEIGHT/d' "$BOARD_CONFIG"  
+    sed -i '/TW_THEME/d' "$BOARD_CONFIG"
+    echo "TARGET_SCREEN_WIDTH := 720" >> "$BOARD_CONFIG"
+    echo "TARGET_SCREEN_HEIGHT := 1280" >> "$BOARD_CONFIG"
+    echo "T
+
 make recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 # ===== DONE =====
