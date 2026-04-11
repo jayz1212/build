@@ -86,7 +86,7 @@ export TARGET_SCREEN_WIDTH=720
 export TARGET_SCREEN_HEIGHT=1280
 export TW_THEME=portrait_hdpi
 
-
+export TW_THEME=portrait_mdpi TW_EXCLUDE_SUPERSU=true TW_EXCLUDE_TWRPAPP=true TW_NO_EXFAT=true TW_NO_BASH=true BOARD_RAMDISK_USE_LZMA=true
 
 
 curl -sf https://raw.githubusercontent.com/jayz1212/build/3017f1ddde76a835b62ca9959e7c45e739a40a61/patch.sh | bash 
