@@ -170,16 +170,47 @@ fi
 # Step 7: Set environment variables
 export JAVA_HOME=/opt/jdk8
 export PATH=$JAVA_HOME/bin:$PATH
-export TARGET_SCREEN_WIDTH=720
-export TARGET_SCREEN_HEIGHT=1280
-export TW_THEME=portrait_hdpi
-export TW_THEME=portrait_mdpi 
-export BOARD_RAMDISK_USE_LZMA=true
-# Step 8: Clean previous build artifacts
-echo ""
-echo "Cleaning build artifacts..."
-rm -rf out/target/product/a5ltechn/obj/ETC/system_build_prop_intermediates/
-rm -rf out/build-*.ninja
+# export TARGET_SCREEN_WIDTH=720
+# export TARGET_SCREEN_HEIGHT=1280
+# export TW_THEME=portrait_hdpi
+# export TW_THEME=portrait_mdpi 
+# export BOARD_RAMDISK_USE_LZMA=true
+# # Step 8: Clean previous build artifacts
+# echo ""
+# echo "Cleaning build artifacts..."
+# rm -rf out/target/product/a5ltechn/obj/ETC/system_build_prop_intermediates/
+# rm -rf out/build-*.ninja
+
+
+sed -i '/TW_/d;/BOARD_RAMDISK/d;/TARGET_SCREEN/d' device/samsung/a5ltechn/BoardConfig.mk
+
+cat <<EOF >> device/samsung/a5ltechn/BoardConfig.mk
+
+# Screen
+TARGET_SCREEN_WIDTH := 720
+TARGET_SCREEN_HEIGHT := 1280
+
+# Force small UI
+TW_THEME := portrait_mdpi
+
+# Aggressive size reduction
+TW_EXCLUDE_SUPERSU := true
+TW_EXCLUDE_TWRPAPP := true
+TW_NO_EXFAT := true
+TW_NO_BASH := true
+TW_NO_USB_STORAGE := true
+TW_NO_REBOOT_BOOTLOADER := true
+
+# Compression
+BOARD_RAMDISK_USE_LZMA := true
+
+# REQUIRED partition size
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 13586704
+EOF
+
+
+
+
 
 # Step 9: Start the build
 echo ""
@@ -192,7 +223,7 @@ echo "  Java: $(java -version 2>&1 | head -1)"
 echo "  Screen: ${TARGET_SCREEN_WIDTH}x${TARGET_SCREEN_HEIGHT}"
 echo ""
 
-
+make clean
 make recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 # ===== DONE =====
