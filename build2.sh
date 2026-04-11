@@ -92,36 +92,6 @@ export TW_THEME=portrait_mdpi TW_EXCLUDE_SUPERSU=true TW_EXCLUDE_TWRPAPP=true TW
 curl -sf https://raw.githubusercontent.com/jayz1212/build/16a45a187e727950a9342f54b85d3f880b5c82ca/b2.sh | bash 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Find and patch BoardConfig.mk
-# BOARD_CONFIG=$(find device/ -name "BoardConfig.mk" -path "*/samsung/*" | head -1)
-# if [[ -f "$BOARD_CONFIG" ]]; then
-#     sed -i '/TARGET_SCREEN_WIDTH/d' "$BOARD_CONFIG"
-#     sed -i '/TARGET_SCREEN_HEIGHT/d' "$BOARD_CONFIG"  
-#     sed -i '/TW_THEME/d' "$BOARD_CONFIG"
-#     echo "TARGET_SCREEN_WIDTH := 720" >> "$BOARD_CONFIG"
-#     echo "TARGET_SCREEN_HEIGHT := 1280" >> "$BOARD_CONFIG"
-#     echo "T
-make clean
 make recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
 # ===== DONE =====
