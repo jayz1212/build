@@ -180,17 +180,40 @@ export PATH=$JAVA_HOME/bin:$PATH
 # echo "Cleaning build artifacts..."
 # rm -rf out/target/product/a5ltechn/obj/ETC/system_build_prop_intermediates/
 # rm -rf out/build-*.ninja
+##################################################################
+#!/bin/bash
+# TWRP Size Compression Script - Focused only on reducing recovery size
 
+cd /tmp/src/android
 
-cat > /tmp/src/android/device/samsung/a5ltechn/BoardConfig_minimal.mk << 'EOF'
-# Minimal TWRP configuration for Samsung A5000
+echo "========================================="
+echo "TWRP Size Compression & Optimization"
+echo "========================================="
 
-# Screen
-TARGET_SCREEN_WIDTH := 720
-TARGET_SCREEN_HEIGHT := 1280
-TW_THEME := portrait_hdpi
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-# Maximum size reduction
+print_status() { echo -e "${BLUE}[*]${NC} $1"; }
+print_success() { echo -e "${GREEN}[+]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
+
+# 1. Add compression flags to BoardConfig.mk
+print_status "Adding compression flags to BoardConfig.mk..."
+
+cat >> device/samsung/a5ltechn/BoardConfig.mk << 'EOF'
+
+# ============================================
+# Compression & Size Reduction Flags
+# ============================================
+
+# Ramdisk compression (LZMA gives best compression)
+LZMA_RAMDISK_TARGETS := recovery
+BOARD_RAMDISK_USE_LZ4 := true
+
+# Remove unnecessary features
 TW_EXTRA_LANGUAGES := false
 TW_EXCLUDE_ENCRYPTED_BACKUPS := true
 TW_EXCLUDE_APP_MANAGER := true
@@ -199,40 +222,169 @@ TW_EXCLUDE_TREBLE := true
 TW_EXCLUDE_FBE := true
 TW_EXCLUDE_MTP := true
 TW_EXCLUDE_ADB := true
+TW_NO_USB_STORAGE := true
 TW_EXCLUDE_SUPERSU := true
 TW_EXCLUDE_CRYPTO := true
 TW_EXCLUDE_OPENRECOVERY_SCRIPT := true
+TW_EXCLUDE_HAPTICS := true
+TW_INCLUDE_FB2PNG := false
+TW_NO_EXFAT := true
+TW_EXCLUDE_TZDATA := true
 TW_EXCLUDE_NANO := true
 TW_EXCLUDE_PYTHON := true
 TW_EXCLUDE_BASH := true
+TW_EXCLUDE_LPTOOLS := true
 TW_EXCLUDE_TWRPAPP := true
+TW_INCLUDE_NTFS_3G := false
 TWRP_INCLUDE_LOGCAT := false
 TW_NO_BATT_PERCENT := true
+TW_NO_CPU_TEMP := true
+TW_NO_SCREEN_TIMEOUT := true
+BOARD_HAS_NO_REAL_SDCARD := true
+
+# Minimal build
 TW_OEM_BUILD := true
+TW_USE_TOOLBOX := true
 
-# Compression
-LZMA_RAMDISK_TARGETS := recovery
-BOARD_RAMDISK_USE_LZ4 := true
-
-# Compiler flags
-TARGET_GLOBAL_CFLAGS += -Os -ffunction-sections -fdata-sections
+# Compiler optimizations for size
+TARGET_GLOBAL_CFLAGS += -Os -ffunction-sections -fdata-sections -fno-unwind-tables -fomit-frame-pointer
+TARGET_GLOBAL_CPPFLAGS += -Os -ffunction-sections -fdata-sections -fno-unwind-tables -fomit-frame-pointer
 TARGET_GLOBAL_LDFLAGS += -Wl,--gc-sections -Wl,--strip-all
+
+# Disable resetprop to save space
+TW_INCLUDE_RESETPROP := false
+
 EOF
 
-# Use minimal config
-cp /tmp/src/android/device/samsung/a5ltechn/BoardConfig_minimal.mk /tmp/src/android/device/samsung/a5ltechn/BoardConfig.mk
+print_success "Compression flags added"
 
+# 2. Compress PNG images aggressively
+print_status "Compressing PNG images..."
+
+if [ -d "bootable/recovery/gui" ]; then
+    # Install optimization tools
+    sudo apt update > /dev/null 2>&1
+    sudo apt install -y optipng advancecomp pngquant 2>/dev/null
+    
+    # Count PNG files
+    PNG_COUNT=$(find bootable/recovery/gui -name "*.png" 2>/dev/null | wc -l)
+    print_status "Found $PNG_COUNT PNG files to compress"
+    
+    if [ $PNG_COUNT -gt 0 ]; then
+        # Lossless compression with optipng
+        print_status "Running lossless compression (optipng)..."
+        find bootable/recovery/gui -name "*.png" -exec optipng -o7 -strip all {} \; 2>/dev/null
+        
+        # Additional compression with advpng
+        print_status "Running additional compression (advpng)..."
+        find bootable/recovery/gui -name "*.png" -exec advpng -z -4 {} \; 2>/dev/null
+        
+        # Lossy compression for animation frames (saves more space)
+        print_status "Compressing animation frames (lossy)..."
+        find bootable/recovery/gui -path "*/images/loop*.png" 2>/dev/null | while read img; do
+            pngquant --quality=30-70 --ext .png --force "$img" 2>/dev/null
+        done
+        
+        print_success "PNG compression complete"
+    fi
+else
+    print_warning "bootable/recovery/gui not found, skipping PNG compression"
+fi
+
+# 3. Remove unnecessary files from recovery root
+print_status "Cleaning unnecessary files..."
+
+# Clean recovery root
+if [ -d "out/target/product/a5ltechn/recovery/root" ]; then
+    # Remove unnecessary binaries
+    rm -f out/target/product/a5ltechn/recovery/root/sbin/adbd 2>/dev/null
+    rm -f out/target/product/a5ltechn/recovery/root/sbin/mtpdaemon 2>/dev/null
+    rm -f out/target/product/a5ltechn/recovery/root/sbin/busybox 2>/dev/null
+    
+    # Remove unnecessary libraries
+    rm -f out/target/product/a5ltechn/recovery/root/lib/libcrypto.so 2>/dev/null
+    rm -f out/target/product/a5ltechn/recovery/root/lib/libssl.so 2>/dev/null
+    
+    print_success "Unnecessary files removed"
+fi
+
+# 4. Create optimized build script
+print_status "Creating optimized build script..."
+
+cat > build_optimized.sh << 'EOF'
+#!/bin/bash
+# Optimized build script for smaller recovery
+
+cd /tmp/src/android
+
+# Set environment
+export JAVA_HOME=/opt/jdk8
+export PATH=$JAVA_HOME/bin:/usr/bin:$PATH
+export TARGET_SCREEN_WIDTH=720
+export TARGET_SCREEN_HEIGHT=1280
+export TW_THEME=portrait_hdpi
+
+# Use Python 2
+sudo update-alternatives --set python /usr/bin/python2 2>/dev/null
+
+# Clean previous build
 make clean
-make recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
 
-# ===== DONE =====
-echo
-echo "======================================="
-echo "✅ BUILD COMPLETE!"
-echo "📍 Output:"
-echo "out/target/product/${DEVICE}/recovery.img"
-echo "======================================="
-# ===== LUNCH =====
-echo "🍱 Lunching device..."
+# Build with compression
+source build/envsetup.sh
+lunch omni_a5ltechn-eng
+make recoveryimage -j$(nproc)
+
+# Show result
+if [ -f "out/target/product/a5ltechn/recovery.img" ]; then
+    SIZE=$(ls -lh out/target/product/a5ltechn/recovery.img | awk '{print $5}')
+    echo ""
+    echo "========================================="
+    echo "Build complete!"
+    echo "Recovery size: $SIZE"
+    echo "========================================="
+fi
+EOF
+
+chmod +x build_optimized.sh
+print_success "Build script created: ./build_optimized.sh"
+
+# 5. Show size comparison if old image exists
+print_status "Size analysis..."
+
+if [ -f "out/target/product/a5ltechn/recovery.img" ]; then
+    CURRENT_SIZE=$(ls -lh out/target/product/a5ltechn/recovery.img | awk '{print $5}')
+    print_warning "Current recovery size: $CURRENT_SIZE"
+else
+    print_warning "No existing recovery image found"
+fi
+
+echo ""
+echo "========================================="
+echo "Compression setup complete!"
+echo "========================================="
+echo "To build optimized recovery:"
+echo "  ./build_optimized.sh"
+echo ""
+echo "Or manually:"
+echo "  source build/envsetup.sh"
+echo "  lunch omni_a5ltechn-eng"
+echo "  make recoveryimage"
+echo "========================================="
+######################################################
+
+
+# make clean
+# make recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
+
+# # ===== DONE =====
+# echo
+# echo "======================================="
+# echo "✅ BUILD COMPLETE!"
+# echo "📍 Output:"
+# echo "out/target/product/${DEVICE}/recovery.img"
+# echo "======================================="
+# # ===== LUNCH =====
+# echo "🍱 Lunching device..."
 
 
