@@ -56,7 +56,6 @@ cd /tmp/src/android
 #!/bin/bash
 # Single script to fix and build TWRP for Samsung A5000 with size optimizations
 
-set -e
 
 cd /tmp/src/android
 
