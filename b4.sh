@@ -19,7 +19,7 @@ echo
 # ===== INIT TWRP SOURCE =====
 if [ ! -d ".repo" ]; then
     echo "📥 Initializing TWRP source..."
-   repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-7.1
+   repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-6.0
 fi
 
 # ===== SYNC =====
