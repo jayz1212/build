@@ -1,7 +1,4 @@
 #!/bin/bash
-# fix_twrp_build_final.sh
-
-#!/bin/bash
 # fix_build_scripts_final.sh
 
 cd /tmp/src/android
@@ -49,20 +46,3 @@ rm -rf out/build-*.ninja
 source build/envsetup.sh
 lunch omni_a5ltechn-eng
 make recoveryimage
-
-export JAVA_HOME=/opt/jdk8
-export PATH=$JAVA_HOME/bin:$PATH
-export TARGET_SCREEN_WIDTH=720
-export TARGET_SCREEN_HEIGHT=1280
-export TW_THEME=portrait_hdpi
-
-# Source build environment
-if [ -f "build/envsetup.sh" ]; then
-    source build/envsetup.sh
-    lunch omni_a5ltechn-eng
-    make recoveryimage
-else
-    echo "ERROR: build/envsetup.sh not found!"
-    echo "Are you in the Android source root directory?"
-    exit 1
-fi
