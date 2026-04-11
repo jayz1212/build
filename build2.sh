@@ -311,8 +311,7 @@ fi
 # 4. Create optimized build script
 print_status "Creating optimized build script..."
 
-cat > build_optimized.sh << 'EOF'
-#!/bin/bash
+
 # Optimized build script for smaller recovery
 
 cd /tmp/src/android
@@ -344,10 +343,9 @@ if [ -f "out/target/product/a5ltechn/recovery.img" ]; then
     echo "Recovery size: $SIZE"
     echo "========================================="
 fi
-EOF
+
 
 chmod +x build_optimized.sh
-print_success "Build script created: ./build_optimized.sh"
 
 # 5. Show size comparison if old image exists
 print_status "Size analysis..."
