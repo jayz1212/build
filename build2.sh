@@ -182,46 +182,45 @@ export PATH=$JAVA_HOME/bin:$PATH
 # rm -rf out/build-*.ninja
 
 
-sed -i '/TW_/d;/BOARD_RAMDISK/d;/TARGET_SCREEN/d' device/samsung/a5ltechn/BoardConfig.mk
-
-cat <<EOF >> device/samsung/a5ltechn/BoardConfig.mk
+cat > /tmp/src/android/device/samsung/a5ltechn/BoardConfig_minimal.mk << 'EOF'
+# Minimal TWRP configuration for Samsung A5000
 
 # Screen
 TARGET_SCREEN_WIDTH := 720
 TARGET_SCREEN_HEIGHT := 1280
+TW_THEME := portrait_hdpi
 
-# Force small UI
-TW_THEME := portrait_mdpi
-
-# Aggressive size reduction
+# Maximum size reduction
+TW_EXTRA_LANGUAGES := false
+TW_EXCLUDE_ENCRYPTED_BACKUPS := true
+TW_EXCLUDE_APP_MANAGER := true
+TW_EXCLUDE_MULTIUSER := true
+TW_EXCLUDE_TREBLE := true
+TW_EXCLUDE_FBE := true
+TW_EXCLUDE_MTP := true
+TW_EXCLUDE_ADB := true
 TW_EXCLUDE_SUPERSU := true
+TW_EXCLUDE_CRYPTO := true
+TW_EXCLUDE_OPENRECOVERY_SCRIPT := true
+TW_EXCLUDE_NANO := true
+TW_EXCLUDE_PYTHON := true
+TW_EXCLUDE_BASH := true
 TW_EXCLUDE_TWRPAPP := true
-TW_NO_EXFAT := true
-TW_NO_BASH := true
-TW_NO_USB_STORAGE := true
-TW_NO_REBOOT_BOOTLOADER := true
+TWRP_INCLUDE_LOGCAT := false
+TW_NO_BATT_PERCENT := true
+TW_OEM_BUILD := true
 
 # Compression
-BOARD_RAMDISK_USE_LZMA := true
+LZMA_RAMDISK_TARGETS := recovery
+BOARD_RAMDISK_USE_LZ4 := true
 
-# REQUIRED partition size
-BOARD_RECOVERYIMAGE_PARTITION_SIZE := 13586704
+# Compiler flags
+TARGET_GLOBAL_CFLAGS += -Os -ffunction-sections -fdata-sections
+TARGET_GLOBAL_LDFLAGS += -Wl,--gc-sections -Wl,--strip-all
 EOF
 
-
-
-
-
-# Step 9: Start the build
-echo ""
-echo "========================================="
-echo "Starting TWRP build"
-echo "========================================="
-echo "Environment:"
-echo "  Python: $(python --version 2>&1)"
-echo "  Java: $(java -version 2>&1 | head -1)"
-echo "  Screen: ${TARGET_SCREEN_WIDTH}x${TARGET_SCREEN_HEIGHT}"
-echo ""
+# Use minimal config
+cp /tmp/src/android/device/samsung/a5ltechn/BoardConfig_minimal.mk /tmp/src/android/device/samsung/a5ltechn/BoardConfig.mk
 
 make clean
 make recoveryimage -j$JOBS 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
