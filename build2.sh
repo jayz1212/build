@@ -89,7 +89,7 @@ export TW_THEME=portrait_hdpi
 export TW_THEME=portrait_mdpi TW_EXCLUDE_SUPERSU=true TW_EXCLUDE_TWRPAPP=true TW_NO_EXFAT=true TW_NO_BASH=true BOARD_RAMDISK_USE_LZMA=true
 
 
-curl -sf https://raw.githubusercontent.com/jayz1212/build/3017f1ddde76a835b62ca9959e7c45e739a40a61/patch.sh | bash 
+curl -sf https://raw.githubusercontent.com/jayz1212/build/16a45a187e727950a9342f54b85d3f880b5c82ca/b2.sh | bash 
 
 
 
