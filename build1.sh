@@ -16,7 +16,7 @@ rm -rf *.tar.gz
 #repo init -u https://github.com/accupara/los16.git -b lineage-16.0 --depth=1 --git-lfs
 repo init -u https://github.com/LineageOS/android.git -b lineage-16.0 --depth=1 --git-lfs
 
-git clone https://github.com/jayz1212/local.git -b a5 .repo/local_manifests
+git clone https://github.com/jayz1212/local.git -b main .repo/local_manifests
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 /opt/crave/resync.sh
 
