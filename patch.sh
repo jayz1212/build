@@ -1,65 +1,123 @@
 #!/bin/bash
-# build_twrp_with_python2_check.sh
+# build_twrp_complete.sh
 
-# Function to check and install Python 2 if needed
-setup_python2() {
-    if command -v python2 &> /dev/null && python2 --version 2>&1 | grep -q "Python 2"; then
-        echo "✅ Python 2 already available"
-        export PATH="/usr/local/bin:$PATH"
+set -e
+
+cd /tmp/src/android
+
+echo "========================================="
+echo "Setting up build environment for TWRP"
+echo "========================================="
+
+# 1. Install Python 2 from Debian 11 (binary)
+install_python2() {
+    if command -v python2 &> /dev/null; then
+        echo "✅ Python 2 already present"
         return 0
     fi
     
-    echo "⚠️  Python 2 not found, installing from source..."
-    
-    # Install build dependencies
+    echo "Installing Python 2 from Debian 11..."
+    echo "deb [trusted=yes] http://deb.debian.org/debian bullseye main" | sudo tee /etc/apt/sources.list.d/bullseye.list
     sudo apt update
-    sudo apt install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
-        libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
-        tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+    sudo apt install -y python2 python2-minimal
+    sudo rm /etc/apt/sources.list.d/bullseye.list
+    sudo apt update
     
-    # Download and compile Python 2.7
-    cd /tmp
-    wget -q --show-progress https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
-    tar xzf Python-2.7.18.tgz
-    cd Python-2.7.18
-    ./configure --prefix=/usr/local --enable-optimizations
-    make -j$(nproc)
-    sudo make altinstall
-    sudo ln -sf /usr/local/bin/python2.7 /usr/local/bin/python2
-    cd /tmp
-    rm -rf Python-2.7.18
+    # Create symlink
+    sudo ln -sf /usr/bin/python2 /usr/local/bin/python
     
-    echo "✅ Python 2.7 installed"
+    echo "✅ Python 2 installed"
 }
 
-# Main build process
-main() {
-    cd /tmp/src/android
-    
-    # Setup Python 2 (only if needed)
-    setup_python2
-    
-    # Set environment to use Python 2
-    export PATH="/usr/local/bin:$PATH"
-    
-    # Verify Python version
-    echo "Using Python:"
-    python2 --version
-    
-    # Fix the Python script if needed
-    if [ -f "build/tools/check_radio_versions.py" ]; then
-        echo "Checking build scripts..."
-        # Make a backup
-        cp build/tools/check_radio_versions.py build/tools/check_radio_versions.py.bak
-        # Fix print statements for Python 3 compatibility if needed
-        sed -i 's/print "\([^"]*\)"/print("\1")/g' build/tools/check_radio_versions.py
+# 2. Set up Java 8
+setup_java8() {
+    if java -version 2>&1 | grep -q 'version "1.8\|version "8'; then
+        echo "✅ Java 8 already present"
+        return 0
     fi
     
-    # Build TWRP
+    echo "Setting up Java 8..."
+    cd /tmp
+    wget -q https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u432-b06/OpenJDK8U-jdk_x64_linux_hotspot_8u432b06.tar.gz
+    sudo tar -xzf OpenJDK8U-jdk_x64_linux_hotspot_8u432b06.tar.gz -C /opt/
+    sudo mv /opt/jdk8u432-b06 /opt/jdk8
+    sudo update-alternatives --install /usr/bin/java java /opt/jdk8/bin/java 100
+    sudo update-alternatives --set java /opt/jdk8/bin/java
+    rm OpenJDK8U-jdk_x64_linux_hotspot_8u432b06.tar.gz
+    
+    export JAVA_HOME=/opt/jdk8
+    export PATH=$JAVA_HOME/bin:$PATH
+    echo "✅ Java 8 installed"
+}
+
+# 3. Fix Python script in build tree
+fix_build_scripts() {
+    echo "Fixing Python 2/3 compatibility..."
+    
+    if [ -f "build/tools/check_radio_versions.py" ]; then
+        # Convert to Python 3 compatible
+        sed -i 's/print "\([^"]*\)"/print("\1")/g' build/tools/check_radio_versions.py
+        sed -i "s/print '\([^']*\)'/print('\1')/g" build/tools/check_radio_versions.py
+    fi
+}
+
+# 4. Fix screen resolution for A5000
+fix_screen_config() {
+    echo "Setting up screen configuration for Samsung A5000..."
+    
+    # Find BoardConfig.mk
+    BOARD_CONFIG=$(find device/ -name "BoardConfig.mk" -path "*/a5ltechn/*" 2>/dev/null | head -1)
+    
+    if [ -n "$BOARD_CONFIG" ]; then
+        # Remove old entries
+        sed -i '/TARGET_SCREEN_WIDTH/d' "$BOARD_CONFIG"
+        sed -i '/TARGET_SCREEN_HEIGHT/d' "$BOARD_CONFIG"
+        sed -i '/TW_THEME/d' "$BOARD_CONFIG"
+        
+        # Add correct config
+        cat >> "$BOARD_CONFIG" << EOF
+
+# Samsung A5000 display configuration
+TARGET_SCREEN_WIDTH := 720
+TARGET_SCREEN_HEIGHT := 1280
+TW_THEME := portrait_hdpi
+EOF
+        echo "✅ Screen config added to $BOARD_CONFIG"
+    else
+        echo "⚠️  BoardConfig.mk not found, skipping"
+    fi
+}
+
+# 5. Main build
+build_twrp() {
+    echo ""
+    echo "========================================="
+    echo "Starting TWRP build"
+    echo "========================================="
+    
+    # Set environment
+    export JAVA_HOME=/opt/jdk8
+    export PATH=$JAVA_HOME/bin:/usr/local/bin:$PATH
+    export TARGET_SCREEN_WIDTH=720
+    export TARGET_SCREEN_HEIGHT=1280
+    export TW_THEME=portrait_hdpi
+    
+    # Use Python 2
+    alias python=python2
+    
+    echo "Using:"
+    echo "  Java: $(java -version 2>&1 | head -1)"
+    echo "  Python: $(python2 --version 2>&1)"
+    
+    # Build
     source build/envsetup.sh
     lunch omni_a5ltechn-eng
     make recoveryimage
 }
 
-# Run the build
-main
+# Run all steps
+install_python2
+setup_java8
+fix_build_scripts
+fix_screen_config
+build_twrp
