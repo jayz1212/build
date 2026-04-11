@@ -11,7 +11,9 @@ tar -cvf recovery.tar recovery.img
 
 echo "Created: recovery.tar"
 cd -
+rm -rf crdroid10.x/*.tar
 cp out/target/product/a5ltechn/recovery.tar crdroid10.x
+
 cd crdroid10.x
 chmod +x multi_upload.sh
 ./multi_upload.sh
