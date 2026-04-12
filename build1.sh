@@ -401,7 +401,7 @@ echo "[✓] Using Python: $(python2 --version)"
 
 
 
-
+cd /tmp/src/android
 export _JAVA_OPTIONS="-Xmx2g"
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
