@@ -362,34 +362,39 @@ echo "🚀 Kernel fix applied successfully!"
 
 ########################################################################################################
 
+# Check if python2 already exists
+if command -v python2 >/dev/null 2>&1; then
+    echo "[✓] Python2 already installed: $(python2 --version)"
+else
+    echo "[!] Python2 not found. Installing..."
 
+    sudo apt update
+    sudo apt install -y build-essential wget libssl-dev zlib1g-dev \
+    libncurses5-dev libffi-dev libsqlite3-dev libreadline-dev
 
+    cd /tmp
 
+    # Download only if not already downloaded
+    [ -f Python-2.7.18.tgz ] || wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
 
-echo "✅ Environment ready for Android build!"
+    tar -xf Python-2.7.18.tgz
+    cd Python-2.7.18
 
+    export CFLAGS="-std=gnu89"
 
-sudo apt update
-sudo apt install -y build-essential wget libssl-dev zlib1g-dev \
-libncurses5-dev libffi-dev libsqlite3-dev libreadline-dev
+    make clean || true
+    ./configure --prefix=/usr/local/python2
+    make -j$(nproc)
+    sudo make install
 
-cd /tmp
-wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
-tar -xf Python-2.7.18.tgz
-cd Python-2.7.18
+    export PATH="/usr/local/python2/bin:$PATH"
+fi
 
-
-
-cd /tmp/Python-2.7.18
-export CFLAGS="-std=gnu89"
-make clean
-
-./configure --prefix=/usr/local/python2
-make -j$(nproc)
-sudo make install
-
+# Ensure environment is set
 export PATH="/usr/local/python2/bin:$PATH"
 export PYTHON=python2
+
+echo "[✓] Using Python: $(python2 --version)"
 
 
 
