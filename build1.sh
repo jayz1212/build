@@ -381,7 +381,6 @@ else
     cd Python-2.7.18
 
     export CFLAGS="-std=gnu89"
-
     make clean || true
     ./configure --prefix=/usr/local/python2
     make -j$(nproc)
