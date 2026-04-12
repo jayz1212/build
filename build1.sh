@@ -403,6 +403,7 @@ echo "[✓] Using Python: $(python2 --version)"
 
 cd /tmp/src/android
 export _JAVA_OPTIONS="-Xmx2g"
+sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/' kernel/samsung/msm8916/scripts/dtc/dtc-lexer.lex.c_shipped
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
 
