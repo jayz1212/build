@@ -326,38 +326,38 @@ fi
 
 echo "🚀 Kernel fix applied successfully!"
 ########################################################################################################
-#!/usr/bin/env bash
-set -e
+# #!/usr/bin/env bash
+# set -e
 
-echo "🔑 Fixing pacman keys (non-interactive)..."
+# echo "🔑 Fixing pacman keys (non-interactive)..."
 
-sudo rm -rf /etc/pacman.d/gnupg
+# sudo rm -rf /etc/pacman.d/gnupg
 
-sudo pacman-key --init
-sudo pacman-key --populate archlinux
+# sudo pacman-key --init
+# sudo pacman-key --populate archlinux
 
-# Install/update keyring (fallback included)
-sudo pacman -Sy --noconfirm archlinux-keyring || \
-sudo pacman -U --noconfirm https://archive.archlinux.org/packages/a/archlinux-keyring/archlinux-keyring-20260323-1-any.pkg.tar.zst
+# # Install/update keyring (fallback included)
+# sudo pacman -Sy --noconfirm archlinux-keyring || \
+# sudo pacman -U --noconfirm https://archive.archlinux.org/packages/a/archlinux-keyring/archlinux-keyring-20260323-1-any.pkg.tar.zst
 
-# Full system sync
-sudo pacman -Syyu --noconfirm
-
-
-echo "☕ Installing build dependencies..."
-
-sudo pacman -S --noconfirm \
-    jdk8-openjdk \
-    ncurses \
-    python
+# # Full system sync
+# sudo pacman -Syyu --noconfirm
 
 
-echo "⚙️ Setting Java 8..."
+# echo "☕ Installing build dependencies..."
 
-sudo archlinux-java set java-8-openjdk
+# sudo pacman -S --noconfirm \
+#     jdk8-openjdk \
+#     ncurses \
+#     python
 
-export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
-export PATH=$JAVA_HOME/bin:$PATH
+
+# echo "⚙️ Setting Java 8..."
+
+# sudo archlinux-java set java-8-openjdk
+
+# export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
+# export PATH=$JAVA_HOME/bin:$PATH
 
 
 ########################################################################################################
