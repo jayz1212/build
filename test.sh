@@ -1,1 +1,1 @@
-echo "💥 Force removing rild completely..."
+echo "💥 Forcfdfdsfmpletely..."
