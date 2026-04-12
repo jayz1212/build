@@ -402,7 +402,6 @@ echo "[✓] Using Python: $(python2 --version)"
 
 
 
-cd -
 export _JAVA_OPTIONS="-Xmx2g"
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
