@@ -403,6 +403,9 @@ echo "[✓] Using Python: $(python2 --version)"
 
 
 cd -
+export _JAVA_OPTIONS="-Xmx2g"
+. build/envsetup.sh
+lunch lineage_a5ltechn-userdebug
 
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 make bacon -j3 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
