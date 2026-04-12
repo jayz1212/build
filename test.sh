@@ -1,1 +1,1 @@
-echo "💥 Forcfdfdsfmpletely..."
+echo "💥 ff..."
