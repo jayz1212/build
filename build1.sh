@@ -406,7 +406,9 @@ export _JAVA_OPTIONS="-Xmx2g"
 sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/' kernel/samsung/msm8916/scripts/dtc/dtc-lexer.lex.c_shipped
 . build/envsetup.sh
 lunch lineage_a5ltechn-userdebug
-
+grep -q '@layout/preference_category_material_settings' device/samsung/qcom-common/doze/res/values/styles.xml && \
+sed -i 's|@layout/preference_category_material_settings|@*android:layout/preference_category_material|g;s|@layout/preference_material_settings|@*android:layout/preference_material|g' device/samsung/qcom-common/doze/res/values/styles.xml && \
+echo "Fixed." || echo "Already patched, skipping."
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 make bacon -j3 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
