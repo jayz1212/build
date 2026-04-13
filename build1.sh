@@ -408,9 +408,40 @@ sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/' kernel/samsung/msm8916/scrip
 lunch lineage_a5ltechn-userdebug
 
 
-grep -q '@layout/preference_category_material_settings' device/samsung/qcom-common/doze/res/values/styles.xml && \
-sed -i 's|@layout/preference_category_material_settings|@*android:layout/preference_category_material|g;s|@layout/preference_material_settings|@*android:layout/preference_material|g' device/samsung/qcom-common/doze/res/values/styles.xml && \
-echo "Fixed." || echo "Already patched, skipping."
+#!/bin/bash
+
+DOZE_PATH="device/samsung/qcom-common/doze"
+
+echo "[*] Fixing SamsungDoze missing resources..."
+
+# Ensure values directory exists
+mkdir -p $DOZE_PATH/res/values
+
+STRINGS_FILE="$DOZE_PATH/res/values/strings.xml"
+
+# Add strings if missing
+if ! grep -q "device_settings_app_name" "$STRINGS_FILE" 2>/dev/null; then
+cat >> "$STRINGS_FILE" <<EOF
+
+<resources>
+    <string name="device_settings_app_name">Doze</string>
+    <string name="ambient_display_title">Ambient Display</string>
+</resources>
+EOF
+echo "[+] Added missing strings"
+else
+echo "[=] Strings already exist"
+fi
+
+# Fallback: patch manifest if needed
+MANIFEST="$DOZE_PATH/AndroidManifest.xml"
+
+sed -i 's/@string\/device_settings_app_name/Doze/g' "$MANIFEST"
+sed -i 's/@string\/ambient_display_title/Ambient Display/g' "$MANIFEST"
+
+echo "[+] Manifest patched"
+
+echo "[✓] SamsungDoze fix applied"
 
 sleep 20
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
