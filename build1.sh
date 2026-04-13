@@ -412,36 +412,39 @@ lunch lineage_a5ltechn-userdebug
 
 DOZE_PATH="device/samsung/qcom-common/doze"
 
-echo "[*] Fixing SamsungDoze missing resources..."
+echo "[*] Fixing SamsungDoze..."
 
-# Ensure values directory exists
 mkdir -p $DOZE_PATH/res/values
 
 STRINGS_FILE="$DOZE_PATH/res/values/strings.xml"
 
-# Add strings if missing
-if ! grep -q "device_settings_app_name" "$STRINGS_FILE" 2>/dev/null; then
-cat >> "$STRINGS_FILE" <<EOF
-
+# Overwrite safe strings
+cat > "$STRINGS_FILE" <<EOF
 <resources>
     <string name="device_settings_app_name">Doze</string>
     <string name="ambient_display_title">Ambient Display</string>
 </resources>
 EOF
-echo "[+] Added missing strings"
-else
-echo "[=] Strings already exist"
-fi
 
-# Fallback: patch manifest if needed
+echo "[+] Strings fixed"
+
+# Patch manifest
 MANIFEST="$DOZE_PATH/AndroidManifest.xml"
-
 sed -i 's/@string\/device_settings_app_name/Doze/g' "$MANIFEST"
 sed -i 's/@string\/ambient_display_title/Ambient Display/g' "$MANIFEST"
 
 echo "[+] Manifest patched"
 
-echo "[✓] SamsungDoze fix applied"
+# Patch styles
+STYLES_FILE="$DOZE_PATH/res/values/styles.xml"
+
+if [ -f "$STYLES_FILE" ]; then
+    sed -i 's/preference_category_material_settings/preference_category/g' "$STYLES_FILE"
+    sed -i 's/preference_material_settings/preference/g' "$STYLES_FILE"
+    echo "[+] Styles patched"
+fi
+
+echo "[✓] SamsungDoze fully fixed"
 
 sleep 20
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
