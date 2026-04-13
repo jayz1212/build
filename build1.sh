@@ -412,21 +412,33 @@ lunch lineage_a5ltechn-userdebug
 
 DOZE_PATH="device/samsung/qcom-common/doze"
 
-echo "[*] Fixing SamsungDoze..."
+echo "[*] Fixing SamsungDoze FULL..."
 
 mkdir -p $DOZE_PATH/res/values
 
 STRINGS_FILE="$DOZE_PATH/res/values/strings.xml"
 
-# Overwrite safe strings
 cat > "$STRINGS_FILE" <<EOF
 <resources>
     <string name="device_settings_app_name">Doze</string>
     <string name="ambient_display_title">Ambient Display</string>
+
+    <string name="ambient_display_enable_title">Ambient display</string>
+    <string name="ambient_display_enable_summary">Wake screen for notifications</string>
+
+    <string name="hand_wave_gesture_title">Hand wave</string>
+    <string name="hand_wave_gesture_summary">Wave hand to wake device</string>
+
+    <string name="pocket_gesture_title">Pocket detection</string>
+    <string name="pocket_gesture_summary">Wake when removed from pocket</string>
+
+    <string name="proximity_wake_title">Proximity wake</string>
+    <string name="proximity_wake_enable_title">Enable proximity wake</string>
+    <string name="proximity_wake_enable_summary">Use proximity sensor to wake</string>
 </resources>
 EOF
 
-echo "[+] Strings fixed"
+echo "[+] Strings fully injected"
 
 # Patch manifest
 MANIFEST="$DOZE_PATH/AndroidManifest.xml"
@@ -444,7 +456,7 @@ if [ -f "$STYLES_FILE" ]; then
     echo "[+] Styles patched"
 fi
 
-echo "[✓] SamsungDoze fully fixed"
+echo "[✓] SamsungDoze FULLY FIXED"
 
 sleep 20
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
