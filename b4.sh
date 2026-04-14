@@ -373,46 +373,7 @@ sudo update-alternatives --set python /usr/bin/python2 2>/dev/null
 
 
 ##########################
-cd /tmp/src/android
 
-echo "========================================="
-echo "Complete TWRP Backspace Fix"
-echo "========================================="
-
-# Create keylayout in BOTH possible locations
-mkdir -p device/samsung/a5ltechn/root/system/usr/keylayout
-mkdir -p device/samsung/a5ltechn/root/vendor/usr/keylayout
-
-# Create Generic.kl with proper backspace mapping
-cat > device/samsung/a5ltechn/root/system/usr/keylayout/Generic.kl << 'EOF'
-# Generic key layout - Backspace/Delete fix
-key 14    DEL
-key 158   BACK
-key 139   MENU
-key 102   HOME
-key 115   VOLUME_UP
-key 114   VOLUME_DOWN
-key 116   POWER
-EOF
-
-# Copy to vendor location as well (Android 10+ uses vendor)
-cp device/samsung/a5ltechn/root/system/usr/keylayout/Generic.kl device/samsung/a5ltechn/root/vendor/usr/keylayout/
-
-# Create Virtual.kl for virtual keyboard
-cat > device/samsung/a5ltechn/root/system/usr/keylayout/Virtual.kl << 'EOF'
-key 14    DEL
-EOF
-
-# Add to BoardConfig.mk to ensure keylayout is included
-if ! grep -q "PRODUCT_COPY_FILES.*Generic.kl" device/samsung/a5ltechn/device.mk 2>/dev/null; then
-    cat >> device/samsung/a5ltechn/device.mk << 'EOF'
-
-# Include fixed keylayout
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/root/system/usr/keylayout/Generic.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/Generic.kl \
-    $(LOCAL_PATH)/root/vendor/usr/keylayout/Generic.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/Generic.kl
-EOF
-fi
 ###################
 # Clean previous build
 make clean
