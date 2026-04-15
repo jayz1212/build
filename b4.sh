@@ -18,7 +18,7 @@ echo
 
 # ===== INIT TWRP SOURCE =====
 
-repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-7.1
+repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-8.1
 
 
 # ===== SYNC =====
