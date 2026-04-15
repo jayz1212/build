@@ -273,64 +273,64 @@ else
 fi
 
 # 2. Compress PNG images (only if not done before or force flag used)
-# print_status "Checking PNG compression status..."
+print_status "Checking PNG compression status..."
 
-# if [ -d "bootable/recovery/gui" ]; then
+if [ -d "bootable/recovery/gui" ]; then
     
-#     if [ -f "$COMPRESS_MARKER" ] && [ "$FORCE_COMPRESS" == false ]; then
-#         print_warning "PNG compression already performed previously"
-#         print_warning "Skipping to avoid re-compression (no benefit)"
-#         print_warning "To force re-compression, run: $0 --force"
-#     else
-#         print_status "Compressing PNG images..."
+    if [ -f "$COMPRESS_MARKER" ] && [ "$FORCE_COMPRESS" == false ]; then
+        print_warning "PNG compression already performed previously"
+        print_warning "Skipping to avoid re-compression (no benefit)"
+        print_warning "To force re-compression, run: $0 --force"
+    else
+        print_status "Compressing PNG images..."
         
-#         # Install optimization tools
-#         sudo apt update > /dev/null 2>&1
-#         sudo apt install -y optipng advancecomp pngquant 2>/dev/null
+        # Install optimization tools
+        sudo apt update > /dev/null 2>&1
+        sudo apt install -y optipng advancecomp pngquant 2>/dev/null
         
-#         # Count PNG files
-#         PNG_COUNT=$(find bootable/recovery/gui -name "*.png" 2>/dev/null | wc -l)
-#         print_status "Found $PNG_COUNT PNG files to compress"
+        # Count PNG files
+        PNG_COUNT=$(find bootable/recovery/gui -name "*.png" 2>/dev/null | wc -l)
+        print_status "Found $PNG_COUNT PNG files to compress"
         
-#         if [ $PNG_COUNT -gt 0 ]; then
-#             # Get size before compression
-#             SIZE_BEFORE=$(find bootable/recovery/gui -name "*.png" -exec stat -c%s {} \; 2>/dev/null | awk '{sum+=$1} END {print sum}')
-#             SIZE_BEFORE_MB=$((SIZE_BEFORE / 1024 / 1024))
-#             print_status "Total PNG size before: ${SIZE_BEFORE_MB}MB"
+        if [ $PNG_COUNT -gt 0 ]; then
+            # Get size before compression
+            SIZE_BEFORE=$(find bootable/recovery/gui -name "*.png" -exec stat -c%s {} \; 2>/dev/null | awk '{sum+=$1} END {print sum}')
+            SIZE_BEFORE_MB=$((SIZE_BEFORE / 1024 / 1024))
+            print_status "Total PNG size before: ${SIZE_BEFORE_MB}MB"
             
-#             # Lossless compression with optipng
-#             print_status "Running lossless compression (optipng)..."
-#             find bootable/recovery/gui -name "*.png" -exec optipng -o7 -strip all {} \; 2>/dev/null
+            # Lossless compression with optipng
+            print_status "Running lossless compression (optipng)..."
+            find bootable/recovery/gui -name "*.png" -exec optipng -o7 -strip all {} \; 2>/dev/null
             
-#             # Additional compression with advpng
-#             print_status "Running additional compression (advpng)..."
-#             find bootable/recovery/gui -name "*.png" -exec advpng -z -4 {} \; 2>/dev/null
+            # Additional compression with advpng
+            print_status "Running additional compression (advpng)..."
+            find bootable/recovery/gui -name "*.png" -exec advpng -z -4 {} \; 2>/dev/null
             
-#             # Lossy compression for animation frames (saves more space)
-#             print_status "Compressing animation frames (lossy)..."
-#             find bootable/recovery/gui -path "*/images/loop*.png" 2>/dev/null | while read img; do
-#                 pngquant --quality=30-70 --ext .png --force "$img" 2>/dev/null
-#             done
+            # Lossy compression for animation frames (saves more space)
+            print_status "Compressing animation frames (lossy)..."
+            find bootable/recovery/gui -path "*/images/loop*.png" 2>/dev/null | while read img; do
+                pngquant --quality=30-70 --ext .png --force "$img" 2>/dev/null
+            done
             
-#             # Get size after compression
-#             SIZE_AFTER=$(find bootable/recovery/gui -name "*.png" -exec stat -c%s {} \; 2>/dev/null | awk '{sum+=$1} END {print sum}')
-#             SIZE_AFTER_MB=$((SIZE_AFTER / 1024 / 1024))
-#             SAVED=$((SIZE_BEFORE_MB - SIZE_AFTER_MB))
+            # Get size after compression
+            SIZE_AFTER=$(find bootable/recovery/gui -name "*.png" -exec stat -c%s {} \; 2>/dev/null | awk '{sum+=$1} END {print sum}')
+            SIZE_AFTER_MB=$((SIZE_AFTER / 1024 / 1024))
+            SAVED=$((SIZE_BEFORE_MB - SIZE_AFTER_MB))
             
-#             print_success "PNG compression complete"
-#             print_status "Size before: ${SIZE_BEFORE_MB}MB"
-#             print_status "Size after: ${SIZE_AFTER_MB}MB"
-#             print_success "Saved: ${SAVED}MB"
+            print_success "PNG compression complete"
+            print_status "Size before: ${SIZE_BEFORE_MB}MB"
+            print_status "Size after: ${SIZE_AFTER_MB}MB"
+            print_success "Saved: ${SAVED}MB"
             
-#             # Create marker file to indicate compression was done
-#             touch "$COMPRESS_MARKER"
-#         else
-#             print_warning "No PNG files found to compress"
-#         fi
-#     fi
-# else
-#     print_warning "bootable/recovery/gui not found, skipping PNG compression"
-# fi
+            # Create marker file to indicate compression was done
+            touch "$COMPRESS_MARKER"
+        else
+            print_warning "No PNG files found to compress"
+        fi
+    fi
+else
+    print_warning "bootable/recovery/gui not found, skipping PNG compression"
+fi
 
 # 3. Remove unnecessary files from recovery root
 print_status "Cleaning unnecessary files..."
