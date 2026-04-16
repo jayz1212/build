@@ -13,7 +13,7 @@ rm -rf hardware/dolby
 rm -rf hardware/
 
 repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --git-lfs
-git clone https://github.com/jayz1212/local_manifests --depth 1 -b cd13 .repo/local_manifests
+git clone https://github.com/jayz1212/local --depth 1 -b cda13 .repo/local_manifests
 
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 
