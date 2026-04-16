@@ -1,7 +1,7 @@
 
 
 #!/usr/bin/env bash
-
+JOBS=${1:-2}
 # export PYTHON=python3.10
 # export PYTHON=python3
 sudo rm -rf src/android
@@ -460,6 +460,6 @@ echo "[✓] SamsungDoze FULLY FIXED"
 
 sleep 20
 #m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make bacon -j2 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
+make bacon -j$JOBS 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
 
 java -version
