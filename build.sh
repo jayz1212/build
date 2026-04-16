@@ -1,107 +1,62 @@
+sudo apt update
+sudo apt install patchelf -y
 
+rm -rf .repo/local_manifests/
+rm -rf device/xiaomi
+rm -rf device/xiaomi/blossom-kernel
+rm -rf vendor/xiaomi
+rm -rf vendor/gms
+rm -rf vendor/xiaomi/miuicamera
+rm -rf hardware/mediatek
+rm -rf device/mediatek/sepolicy_vndr
+rm -rf hardware/dolby
+rm -rf hardware/
 
-#!/usr/bin/env bash
+repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --git-lfs
+git clone https://github.com/jayz1212/local_manifests --depth 1 -b cd13 .repo/local_manifests
 
-# export PYTHON=python3.10
-# export PYTHON=python3
-sudo rm -rf src/android
-
-rm -rf .repo/local_manifests
-rm -rf device/samsung
-rm -rf vendor/samsung
-rm -rf kernel/samsung
-rm -rf packages/apps/Bluetooth
-rm -rf *.tar.gz
-##https://github.com/accupara/los-cm14.1.git -b cm-14.1 --depth=1 --git-lfs
-#repo init -u https://github.com/accupara/los16.git -b lineage-16.0 --depth=1 --git-lfs
-repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --depth=1 --git-lfs
-
-git clone https://github.com/jayz1212/local.git -b main .repo/local_manifests
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
+
 /opt/crave/resync.sh
 
-sed -i 's|PRODUCT_AAPT_CONFIG := normal hdpi xhdpi|PRODUCT_AAPT_CONFIG ?= normal hdpi xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
-sed -i 's|PRODUCT_AAPT_PREF_CONFIG := xhdpi|PRODUCT_AAPT_PREF_CONFIG ?= xhdpi|' device/samsung/a5-common/BoardConfigCommon.mk
-. build/envsetup.sh
 
 
+DEVICE_DIR="device/xiaomi/blossom/sepolicy/vendor"
+FILE="$DEVICE_DIR/init.te"
 
-curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/ril.sh | bash
+echo "[*] Fixing sepolicy neverallow (mounton)..."
 
+if [ ! -f "$FILE" ]; then
+    echo "[!] File not found: $FILE"
+    exit 1
+fi
 
-# export ARCH=arm
-# export CC=clang
-# export LD=ld.lld
-# export AR=llvm-ar
-# export NM=llvm-nm
-# export STRIP=llvm-strip
-# export OBJCOPY=llvm-objcopy
-# export OBJDUMP=llvm-objdump
-# export READELF=llvm-readelf
-# export HOSTCC=clang
-# export HOSTCXX=clang++
-# export CLANG_TRIPLE=arm-linux-gnueabi-
-# export PATH_OVERRIDE_SOONG="prebuilts/build-tools/path/linux-x86/path_override"
-# export SUBARCH=arm
-# export CROSS_COMPILE=/tmp/src/android/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
+# Backup
+cp "$FILE" "$FILE.bak"
 
+# 1. Remove illegal mounton rules
+sed -i '/volte_.*_exec.*mounton/d' "$FILE"
 
-# # 1. Force correct Java (VERY IMPORTANT)
-# export JAVA_HOME=$(pwd)/prebuilts/jdk/jdk11/linux-x86
-# export PATH=$JAVA_HOME/bin:$PATH
+# 2. Add safe rules if not already present
+grep -q "volte_imcb_exec:file" "$FILE" || cat >> "$FILE" <<EOF
 
-# 2. Clean only the broken module
-rm -rf out/soong/.intermediates/libcore
+# Auto-added safe VoLTE rules
+allow init volte_imcb_exec:file { read open execute getattr };
+allow init volte_stack_exec:file { read open execute getattr };
+allow init volte_ua_exec:file { read open execute getattr };
+EOF
 
-# 3. Disable strict metalava checks (safe for msm8916)
-export RELAX_USES_LIBRARY_CHECK=true
-export BUILD_BROKEN_MISSING_API_CHECKS=true
+echo "[✓] mounton rules removed and safe rules added"
+rm -rf hardware/mediatek/interfaces/hardware/bluetooth
 
-# 4. Rebuild
+source build/envsetup.sh
 
-# # Disable stack protector
-# scripts/config --disable CC_STACKPROTECTOR
-# scripts/config --disable CC_STACKPROTECTOR_STRONG
-# scripts/config --disable CC_STACKPROTECTOR_REGULAR
+export TARGET_USES_PICO_GAPPS=true
+export TARGET_ENABLE_BLUR=false
+rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 
-
-
-
-source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/compilerfix.sh)
-
-# curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/fixlib.sh | bash
-
-source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/a4bdf55c6e6584bb670d90596ad46d2f9f8edb33/fixcurs.sh | bash)
-source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/4ff76f942afb63b356034ad5e4068bb41d7781c8/fixsap.sh | bash)
-source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/java2.sh | bash)
-
-
-. build/envsetup.sh
-lunch lineage_a5ltechn-userdebug
-echo "☕ Forcing Java 8 (hard override)..."
-
-JDK8="/usr/lib/jvm/java-8-openjdk"
-
-export JAVA_HOME="$JDK8"
-export PATH="$JAVA_HOME/bin:$PATH"
-
-# 🔥 HARD FIX
-ln -sf $JDK8/bin/java prebuilts/jdk/jdk9/linux-x86/bin/java
-
-hash -r
-
-which java
-java -version
-
-# CLEAN AFTER FIX
-rm -rf out/soong/.intermediates
-rm -rf out/soong/.intermediates/frameworks/base
-rm -rf out/soong/.intermediates/libcore
-rm -rf out/soong/.intermediates/frameworks/base/api*
-# build
-make clean
-#m Bluetooth -j4 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-make bacon -j8 2>&1 | tee build.log && curl -F "file=@build.log" https://temp.sh/upload
-
-java -version
-
+sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
+sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
+sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
+lunch lineage_blossom-bp4a-eng
+m evolution
