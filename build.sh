@@ -11,7 +11,7 @@ rm -rf device/mediatek/sepolicy_vndr
 rm -rf hardware/dolby
 
 
-repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --git-lfs
+repo init -u https://github.com/Evolution-X/manifest -b bka --depth=1 --git-lfs
 git clone https://github.com/jayz1212/local --depth 1 -b cda13 .repo/local_manifests
 
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
@@ -57,5 +57,5 @@ rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
 sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
 sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
-lunch lineage_blossom-bp4a-eng
+lunch lineage_blossom-bp3a-eng
 m evolution
