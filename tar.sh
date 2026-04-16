@@ -1,6 +1,6 @@
 export GH_TOKEN=$(cat gh_token.txt)
 git clone https://$GH_TOKEN@github.com//jayz1212/crdroid10.x
-cd /tmp/src/android/out/target/product/a5ltechn
+#cd /tmp/src/android/out/target/product/a5ltechn
 
 # Create tar.md5 for Odin
 
@@ -10,10 +10,10 @@ cd /tmp/src/android/out/target/product/a5ltechn
 
 
 #echo "Created: recovery.tar"
-cd -
+#cd -
 rm -rf crdroid10.x/*.img crdroid10.x/*.zip
 cp out/target/product/*/recovery.img crdroid10.x
-cp out/target/product/*/*.zip crdroid10.x
+e
 
 cd crdroid10.x
 chmod +x multi_upload.sh
