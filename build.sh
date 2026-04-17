@@ -13,7 +13,8 @@ rm -rf hardware/dolby
 
 repo init -u https://github.com/Evolution-X/manifest -b bka --depth=1 --git-lfs
 git clone https://github.com/jayz1212/local --depth 1 -b cda13 .repo/local_manifests
-
+sed -i '/packages\/modules\/StatsD/d' .repo/manifests/snippets/evolution.xml
+sed -i '/packages\/modules\/SdkExtensions/a\  <project path="packages/modules/StatsD" name="platform/packages/modules/StatsD" groups="pdk-cw-fs,pdk-fs" remote="aosp" />' .repo/manifests/default.xml
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 
 /opt/crave/resync.sh
