@@ -2,6 +2,7 @@ sudo apt update
 sudo apt install patchelf -y
 
 rm -rf .repo/local_manifests/
+rm -rf .repo/manifests/
 rm -rf device/xiaomi
 rm -rf device/xiaomi/blossom-kernel
 rm -rf vendor/xiaomi
