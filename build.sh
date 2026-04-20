@@ -10,6 +10,15 @@ rm -rf vendor/xiaomi/miuicamera
 rm -rf hardware/mediatek
 rm -rf device/mediatek/sepolicy_vndr
 rm -rf hardware/dolby
+rm -rf bootable
+rm -rf build/make
+rm -rf frameworks/av
+rm -rf frameworks/base
+rm -rf hardware/google/pixel
+rm -rf hawrdware/interfaces
+rm -rf packages/modules/Bluetooth
+rm -rf vendor
+
 
 
 repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --git-lfs
