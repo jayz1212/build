@@ -12,13 +12,12 @@ rm -rf device/mediatek/sepolicy_vndr
 rm -rf hardware/dolby
 
 
-repo init -u https://github.com/Evolution-X/manifest -b bka --depth=1 --git-lfs
+repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --git-lfs
 git clone https://github.com/jayz1212/local --depth 1 -b cda13 .repo/local_manifests
 sed -i 's|<project path="packages/modules/StatsD".*|<project path="packages/modules/StatsD" name="msft-mirror-aosp/platform.packages.modules.StatsD" remote="github" revision="android16-qpr1-release" />|' .repo/manifests/snippets/evolution.xml
 #sed -i '/packages\/modules\/SdkExtensions/a\  <project path="packages/modules/StatsD" name="platform/packages/modules/StatsD" groups="pdk-cw-fs,pdk-fs" remote="aosp" />' .repo/manifests/default.xml
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 
-https://github.com/msft-mirror-aosp/platform.packages.modules.StatsD
 
 /opt/crave/resync.sh
 
@@ -63,5 +62,5 @@ sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
 sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
 
-lunch lineage_blossom-bp3a-eng
+lunch lineage_blossom-bq2-eng
 m evolution
