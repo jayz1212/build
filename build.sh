@@ -48,7 +48,7 @@ EOF
 
 echo "[✓] mounton rules removed and safe rules added"
 rm -rf hardware/mediatek/interfaces/hardware/bluetooth
-
+./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
 source build/envsetup.sh
 
 export TARGET_USES_PICO_GAPPS=true
