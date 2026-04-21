@@ -70,6 +70,7 @@ sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/
 sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
 sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
+sed -i 's/vendor_available: true/vendor: true/g' hardware/interfaces/wifi/legacy_headers/Android.bp
 
 lunch lineage_blossom-bp4a-eng
 #make clean
