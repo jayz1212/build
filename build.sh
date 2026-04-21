@@ -18,6 +18,7 @@ rm -rf hardware/google/pixel
 rm -rf hawrdware/interfaces
 rm -rf packages/modules/Bluetooth
 rm -rf vendor
+rm -rf TMP_PATCHES
 
 
 
@@ -71,4 +72,5 @@ sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/devic
 sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
 
 lunch lineage_blossom-bp4a-eng
+make clean
 m evolution
