@@ -1,7 +1,7 @@
 #!/bin/bash
 
 LOG=build_error.log
-FIXLOG=fixed_modules.log
+FIXLOG=removed_modules.log
 
 > "$FIXLOG"
 
@@ -16,7 +16,7 @@ while true; do
   source build/envsetup.sh
   lunch lineage_blossom-bp4a-eng
 
-  # Run build and capture errors
+  # Build (allow failure)
   m evolution 2>&1 | tee "$LOG"
 
   echo "===== PARSING ERRORS ====="
@@ -34,7 +34,7 @@ while true; do
   FIXED_THIS_ROUND=0
 
   for mod in $MODULES; do
-    echo "🔧 Fixing $mod"
+    echo "🗑️ Removing module $mod"
 
     MATCHES=$(rg -l "name: \"$mod\"" vendor/)
 
@@ -44,22 +44,17 @@ while true; do
     fi
 
     echo "$MATCHES" | while IFS= read -r f; do
-      # Disable module if not already disabled
-      sed -i "/name: \"$mod\"/,/}/ {
-        /enabled:/! s/{/{\n    enabled: false,/
-      }" "$f"
+      # 🔥 Delete entire module block
+      sed -i "/name: \"$mod\"/,/}/d" "$f"
 
-      # 🔥 Remove strip block completely
-      sed -i '/strip: {/,/}/d' "$f"
-
-      echo "ITER $ITER: $mod -> $f (disabled + strip removed)" >> "$FIXLOG"
+      echo "ITER $ITER: $mod -> $f (REMOVED)" >> "$FIXLOG"
     done
 
     FIXED_THIS_ROUND=1
   done
 
   if [ "$FIXED_THIS_ROUND" -eq 0 ]; then
-    echo "❌ No fixes applied this round — stopping to avoid infinite loop"
+    echo "❌ No fixes applied — stopping"
     break
   fi
 
@@ -71,4 +66,4 @@ done
 
 echo ""
 echo "🎉 DONE!"
-echo "📄 Fix log: $FIXLOG"
+echo "📄 Removed modules log: $FIXLOG"
