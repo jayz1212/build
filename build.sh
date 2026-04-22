@@ -72,6 +72,10 @@ sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/devic
 sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
 sed -i 's/vendor_available: true/vendor: true/g' hardware/interfaces/wifi/legacy_headers/Android.bp
 
+rg -l 'cc_prebuilt_library_shared' vendor/ | while IFS= read -r f; do
+  sed -i '/prefer: true/d' "$f"
+done
+
 lunch lineage_blossom-bp4a-eng
 #make clean
 m evolution 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
