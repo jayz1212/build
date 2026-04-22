@@ -25,6 +25,7 @@ remove_module_block() {
   {
     line=$0
 
+    # Detect start of cc module
     if (match(line, /^[[:space:]]*cc_[a-zA-Z0-9_]*[[:space:]]*{/)) {
       in_block=1
       depth=1
@@ -36,25 +37,28 @@ remove_module_block() {
     if (in_block) {
       buffer = buffer line "\n"
 
+      # Track braces
       depth += gsub(/{/, "{")
       depth -= gsub(/}/, "}")
 
+      # Check module name
       if (line ~ "name:[[:space:]]*\"" mod "\"") {
         keep=0
       }
 
+      # End of block
       if (depth == 0) {
         if (keep) {
           printf "%s", buffer
         } else {
-          # Show in terminal
-          printf "\n===== REMOVED MODULE: %s =====\n", mod
-          printf "%s\n", buffer
+          # ✅ PRINT TO TERMINAL ONLY (stderr)
+          printf "\n===== REMOVED MODULE: %s =====\n", mod > "/dev/stderr"
+          printf "%s\n", buffer > "/dev/stderr"
 
-          # Save raw log
+          # ✅ Save raw log
           printf "\n===== REMOVED MODULE: %s (%s) =====\n%s\n", mod, FILENAME, buffer >> logfile
 
-          # ✅ Append clean block to compiled file
+          # ✅ Save clean compiled block
           printf "%s\n\n", buffer >> compiled
         }
 
@@ -64,6 +68,7 @@ remove_module_block() {
       next
     }
 
+    # Outside any module
     print line
   }
   ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
@@ -83,6 +88,7 @@ while true; do
   source build/envsetup.sh
   lunch lineage_blossom-bp4a-eng
 
+  # Run build
   m evolution 2>&1 | tee "$LOG"
 
   echo "===== PARSING ERRORS ====="
