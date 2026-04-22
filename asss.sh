@@ -2,8 +2,10 @@
 
 LOG=build_error.log
 FIXLOG=removed_modules.log
+COMPILED=compiled_removed.bp
 
 > "$FIXLOG"
+> "$COMPILED"
 
 # ==============================
 # Function: Remove module safely
@@ -12,7 +14,7 @@ remove_module_block() {
   local file="$1"
   local module="$2"
 
-  awk -v mod="$module" -v logfile="$FIXLOG" '
+  awk -v mod="$module" -v logfile="$FIXLOG" -v compiled="$COMPILED" '
   BEGIN {
     in_block=0
     depth=0
@@ -23,7 +25,6 @@ remove_module_block() {
   {
     line=$0
 
-    # Detect start of cc module
     if (match(line, /^[[:space:]]*cc_[a-zA-Z0-9_]*[[:space:]]*{/)) {
       in_block=1
       depth=1
@@ -35,26 +36,26 @@ remove_module_block() {
     if (in_block) {
       buffer = buffer line "\n"
 
-      # Track braces
       depth += gsub(/{/, "{")
       depth -= gsub(/}/, "}")
 
-      # Check module name
       if (line ~ "name:[[:space:]]*\"" mod "\"") {
         keep=0
       }
 
-      # End of block
       if (depth == 0) {
         if (keep) {
           printf "%s", buffer
         } else {
-          # Print removed block
+          # Show in terminal
           printf "\n===== REMOVED MODULE: %s =====\n", mod
           printf "%s\n", buffer
 
-          # Save to log
+          # Save raw log
           printf "\n===== REMOVED MODULE: %s (%s) =====\n%s\n", mod, FILENAME, buffer >> logfile
+
+          # ✅ Append clean block to compiled file
+          printf "%s\n\n", buffer >> compiled
         }
 
         in_block=0
@@ -63,7 +64,6 @@ remove_module_block() {
       next
     }
 
-    # Outside any module
     print line
   }
   ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
@@ -83,12 +83,10 @@ while true; do
   source build/envsetup.sh
   lunch lineage_blossom-bp4a-eng
 
-  # Run build (allow failure)
   m evolution 2>&1 | tee "$LOG"
 
   echo "===== PARSING ERRORS ====="
 
-  # Extract conflicting modules
   MODULES=$(grep -oP 'system\(\K[^)]+' "$LOG" | sort -u)
 
   if [ -z "$MODULES" ]; then
@@ -119,7 +117,7 @@ while true; do
   done
 
   if [ "$FIXED" -eq 0 ]; then
-    echo "❌ Nothing fixed — stopping to avoid infinite loop"
+    echo "❌ Nothing fixed — stopping"
     break
   fi
 
@@ -131,4 +129,5 @@ done
 
 echo ""
 echo "🎉 DONE!"
-echo "📄 Removed modules log: $FIXLOG"
+echo "📄 Full log: $FIXLOG"
+echo "📦 Compiled modules: $COMPILED"
