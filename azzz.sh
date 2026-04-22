@@ -16,12 +16,11 @@ while true; do
   source build/envsetup.sh
   lunch lineage_blossom-bp4a-eng
 
-  # Run build and capture errors (DO NOT EXIT ON FAILURE)
+  # Run build and capture errors
   m evolution 2>&1 | tee "$LOG"
 
   echo "===== PARSING ERRORS ====="
 
-  # Extract ONLY partition mismatch modules
   MODULES=$(grep -oP 'system\(\K[^)]+' "$LOG" | sort -u)
 
   if [ -z "$MODULES" ]; then
@@ -45,12 +44,15 @@ while true; do
     fi
 
     echo "$MATCHES" | while IFS= read -r f; do
-      # Only add enabled:false if not already present
+      # Disable module if not already disabled
       sed -i "/name: \"$mod\"/,/}/ {
         /enabled:/! s/{/{\n    enabled: false,/
       }" "$f"
 
-      echo "ITER $ITER: $mod -> $f" >> "$FIXLOG"
+      # 🔥 Remove strip block completely
+      sed -i '/strip: {/,/}/d' "$f"
+
+      echo "ITER $ITER: $mod -> $f (disabled + strip removed)" >> "$FIXLOG"
     done
 
     FIXED_THIS_ROUND=1
