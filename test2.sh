@@ -8,12 +8,12 @@ COMPILED=compiled_removed.bp
 > "$COMPILED"
 
 # ==============================
-# Whitelist patterns (NEVER DELETE)
+# WHITELIST (never delete)
 # ==============================
 WHITELIST_REGEX="camera|drm|keymaster|gatekeeper|keystore|widevine|fingerprint|biometric|radio|ril"
 
 # ==============================
-# Function: Remove module safely
+# Remove ANY module type safely
 # ==============================
 remove_module_block() {
   local file="$1"
@@ -25,7 +25,8 @@ remove_module_block() {
   {
     line=$0
 
-    if (match(line, /^[[:space:]]*cc_[a-zA-Z0-9_]*[[:space:]]*{/)) {
+    # 🔥 MATCH ANY MODULE TYPE (FIXED)
+    if (match(line, /^[[:space:]]*[a-zA-Z0-9_]+[[:space:]]*{/)) {
       in_block=1
       depth=1
       buffer=line "\n"
@@ -35,20 +36,26 @@ remove_module_block() {
 
     if (in_block) {
       buffer = buffer line "\n"
+
+      # Track nested braces
       depth += gsub(/{/, "{")
       depth -= gsub(/}/, "}")
 
+      # Check module name
       if (line ~ "name:[[:space:]]*\"" mod "\"") {
         keep=0
       }
 
+      # End of module block
       if (depth == 0) {
         if (keep) {
           printf "%s", buffer
         } else {
+          # Print safely (stderr)
           printf "\n===== REMOVED MODULE: %s =====\n", mod > "/dev/stderr"
           printf "%s\n", buffer > "/dev/stderr"
 
+          # Save logs
           printf "\n===== REMOVED MODULE: %s (%s) =====\n%s\n", mod, FILENAME, buffer >> logfile
           printf "%s\n\n", buffer >> compiled
         }
@@ -65,7 +72,7 @@ remove_module_block() {
 }
 
 # ==============================
-# Main loop
+# MAIN LOOP
 # ==============================
 ITER=1
 
@@ -100,7 +107,7 @@ while true; do
   for mod in $MODULES; do
     echo "🔎 Processing $mod"
 
-    # 🛡️ WHITELIST CHECK
+    # 🛡️ WHITELIST
     if [[ "$mod" =~ $WHITELIST_REGEX ]]; then
       echo "🛡️ Skipping protected module: $mod"
       continue
@@ -109,20 +116,21 @@ while true; do
     FILES=$(rg -l "name: \"$mod\"" vendor/)
 
     if [ -z "$FILES" ]; then
-      echo "   ℹ️ Not in vendor → skipping"
+      echo "   ℹ️ Not found in vendor"
       continue
     fi
 
     for f in $FILES; do
+      # 🔥 PRIORITY: remove ONLY vendor duplicates
       if [[ "$f" == vendor/xiaomi/blossom/* ]]; then
-        echo "🗑 Removing (vendor duplicate): $mod from $f"
+        echo "🗑 Removing vendor duplicate: $mod from $f"
 
         remove_module_block "$f" "$mod"
         echo "ITER $ITER: $mod -> $f (REMOVED)" >> "$FIXLOG"
 
         FIXED=1
       else
-        echo "   ✅ Keeping (non-vendor): $f"
+        echo "   ✅ Keeping (AOSP/hardware): $f"
       fi
     done
   done
