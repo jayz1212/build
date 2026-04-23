@@ -73,7 +73,9 @@ sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
 export NINJA_ARGS="-j1 -l1"
 export SOONG_UI_JOBS=1
 export GOMAXPROCS=1
-export _JAVA_OPTIONS="-Xmx1g"
+export _JAVA_OPTIONS="-Xmx1200m"
+export LLVM_THREADS=1
+export SOONG_USE_PARTIAL_COMPILE=true
 
 
 
