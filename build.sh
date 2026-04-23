@@ -31,33 +31,34 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 
 
 
-DEVICE_DIR="device/xiaomi/blossom/sepolicy/vendor"
-FILE="$DEVICE_DIR/init.te"
+# DEVICE_DIR="device/xiaomi/blossom/sepolicy/vendor"
+# FILE="$DEVICE_DIR/init.te"
 
-echo "[*] Fixing sepolicy neverallow (mounton)..."
+# echo "[*] Fixing sepolicy neverallow (mounton)..."
 
-if [ ! -f "$FILE" ]; then
-    echo "[!] File not found: $FILE"
-    exit 1
-fi
+# if [ ! -f "$FILE" ]; then
+#     echo "[!] File not found: $FILE"
+#     exit 1
+# fi
 
-# Backup
-cp "$FILE" "$FILE.bak"
+# # Backup
+# cp "$FILE" "$FILE.bak"
 
-# 1. Remove illegal mounton rules
-sed -i '/volte_.*_exec.*mounton/d' "$FILE"
+# # 1. Remove illegal mounton rules
+# sed -i '/volte_.*_exec.*mounton/d' "$FILE"
 
-# 2. Add safe rules if not already present
-grep -q "volte_imcb_exec:file" "$FILE" || cat >> "$FILE" <<EOF
+# # 2. Add safe rules if not already present
+# grep -q "volte_imcb_exec:file" "$FILE" || cat >> "$FILE" <<EOF
 
-# Auto-added safe VoLTE rules
-allow init volte_imcb_exec:file { read open execute getattr };
-allow init volte_stack_exec:file { read open execute getattr };
-allow init volte_ua_exec:file { read open execute getattr };
-EOF
+# # Auto-added safe VoLTE rules
+# allow init volte_imcb_exec:file { read open execute getattr };
+# allow init volte_stack_exec:file { read open execute getattr };
+# allow init volte_ua_exec:file { read open execute getattr };
+# EOF
 
-echo "[✓] mounton rules removed and safe rules added"
-rm -rf hardware/mediatek/interfaces/hardware/bluetooth
+# echo "[✓] mounton rules removed and safe rules added"
+#rm -rf hardware/mediatek/interfaces/hardware/bluetooth
+rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<< /d;/^=======/d;/^>>>>>>> /d'
 #./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
 source build/envsetup.sh
 
@@ -68,13 +69,11 @@ rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 
 sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
 sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
-sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
-sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
-sed -i 's/vendor_available: true/vendor: true/g' hardware/interfaces/wifi/legacy_headers/Android.bp
 
-rg -l 'cc_prebuilt_library_shared' vendor/ | while IFS= read -r f; do
-  sed -i '/prefer: true/d' "$f"
-done
+
+
+
+
 
 lunch lineage_blossom-bp4a-eng
 #make clean
