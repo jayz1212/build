@@ -13,6 +13,60 @@ COMPILED=compiled_removed.bp
 WHITELIST_REGEX="camera|drm|keymaster|gatekeeper|keystore|widevine|fingerprint|biometric|radio|ril"
 
 # ==============================
+# FIX: MTK PERF ALIAS
+# ==============================
+fix_mtkperf_alias() {
+  local file="$1"
+
+  awk '
+  BEGIN { in_block=0; depth=0; buffer=""; skip=0 }
+
+  {
+    line=$0
+
+    if (match(line, /^[[:space:]]*[a-zA-Z0-9_]+[[:space:]]*{/)) {
+      in_block=1
+      depth=1
+      buffer=line "\n"
+      skip=0
+      next
+    }
+
+    if (in_block) {
+      buffer = buffer line "\n"
+      depth += gsub(/{/, "{")
+      depth -= gsub(/}/, "}")
+
+      if (line ~ /name:[[:space:]]*"libmtkperf_client_vendor"/) {
+        skip=1
+      }
+
+      if (depth == 0) {
+        if (!skip) printf "%s", buffer
+        in_block=0
+        buffer=""
+      }
+      next
+    }
+
+    print line
+  }
+  ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+
+  # Append alias
+  cat <<EOF >> "$file"
+
+cc_library_shared {
+    name: "libmtkperf_client_vendor",
+    vendor: true,
+    shared_libs: ["libmtkperf_client"],
+}
+EOF
+
+  echo "🔧 Applied MTK perf alias in $file"
+}
+
+# ==============================
 # Remove ANY module type safely
 # ==============================
 remove_module_block() {
@@ -25,7 +79,6 @@ remove_module_block() {
   {
     line=$0
 
-    # 🔥 MATCH ANY MODULE TYPE (FIXED)
     if (match(line, /^[[:space:]]*[a-zA-Z0-9_]+[[:space:]]*{/)) {
       in_block=1
       depth=1
@@ -37,25 +90,20 @@ remove_module_block() {
     if (in_block) {
       buffer = buffer line "\n"
 
-      # Track nested braces
       depth += gsub(/{/, "{")
       depth -= gsub(/}/, "}")
 
-      # Check module name
       if (line ~ "name:[[:space:]]*\"" mod "\"") {
         keep=0
       }
 
-      # End of module block
       if (depth == 0) {
         if (keep) {
           printf "%s", buffer
         } else {
-          # Print safely (stderr)
           printf "\n===== REMOVED MODULE: %s =====\n", mod > "/dev/stderr"
           printf "%s\n", buffer > "/dev/stderr"
 
-          # Save logs
           printf "\n===== REMOVED MODULE: %s (%s) =====\n%s\n", mod, FILENAME, buffer >> logfile
           printf "%s\n\n", buffer >> compiled
         }
@@ -113,15 +161,28 @@ while true; do
       continue
     fi
 
+    # 🔥 SPECIAL CASE: MTK PERF FIX
+    if [[ "$mod" == "libmtkperf_client_vendor" ]]; then
+      echo "🔧 Fixing MTK perf alias"
+
+      FILES=$(rg -l "libmtkperf_client_vendor" vendor/)
+
+      for f in $FILES; do
+        fix_mtkperf_alias "$f"
+      done
+
+      FIXED=1
+      continue
+    fi
+
     FILES=$(rg -l "name: \"$mod\"" vendor/)
 
     if [ -z "$FILES" ]; then
-      echo "   ℹ️ Not found in vendor"
+      echo "   ℹ️ Not in vendor"
       continue
     fi
 
     for f in $FILES; do
-      # 🔥 PRIORITY: remove ONLY vendor duplicates
       if [[ "$f" == vendor/xiaomi/blossom/* ]]; then
         echo "🗑 Removing vendor duplicate: $mod from $f"
 
