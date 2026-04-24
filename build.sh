@@ -61,7 +61,7 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<< /d;/^=======/d;/^>>>>>>> /d'
 #./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
 source build/envsetup.sh
-
+sed -i '/PRODUCT_PACKAGES/ s/\<BesLoudness\>//g' device/xiaomi/blossom/device.mk
 export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
 export WITH_GMS=false
