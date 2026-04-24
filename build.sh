@@ -61,7 +61,7 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<< /d;/^=======/d;/^>>>>>>> /d'
 #./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
 source build/envsetup.sh
-
+git clone https://github.com/jayz1212/v30 --depth 1 -b main prebuilts/vndk/v30/
 export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
 export WITH_GMS=false
