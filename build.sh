@@ -61,7 +61,7 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<< /d;/^=======/d;/^>>>>>>> /d'
 #./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
 source build/envsetup.sh
-sed -i '/PRODUCT_PACKAGES/ s/\<BesLoudness\>//g' device/xiaomi/blossom/device.mk
+
 export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
 export WITH_GMS=false
@@ -70,6 +70,7 @@ rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
 sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
 sed -i '/# Besloudness/,+2d' device/xiaomi/blossom/device.mk
+sed -i '/dirty_writeback_centisecs/d' device/mediatek/sepolicy_vndr/basic/non_plat/genfs_contexts
 
 
 
