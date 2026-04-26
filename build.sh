@@ -75,20 +75,20 @@ sed -i '/system_server.*sys_module/d' device/mediatek/sepolicy_vndr/basic/non_pl
 sed -i '/^persist.vendor.audio\.\s/d' device/xiaomi/blossom/sepolicy/vendor/property_contexts
 sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 
-FILE="packages/apps/Settings/Evolver/src/org/evolution/settings/fragments/miscellaneous/TrickyStoreAppPicker.kt"
+# FILE="packages/apps/Settings/Evolver/src/org/evolution/settings/fragments/miscellaneous/TrickyStoreAppPicker.kt"
 
-sed -i 's|import com.android.axion.compose.sheet.BottomSheetDialog|import androidx.compose.material3.ModalBottomSheet\nimport androidx.compose.material3.rememberModalBottomSheetState|' "$FILE"
+# sed -i 's|import com.android.axion.compose.sheet.BottomSheetDialog|import androidx.compose.material3.ModalBottomSheet\nimport androidx.compose.material3.rememberModalBottomSheetState|' "$FILE"
 
-sed -i '/BottomSheetDialog(/,/){/c\
-        val sheetState = rememberModalBottomSheetState()\
-\
-        ModalBottomSheet(\
-            onDismissRequest = {\
-                saveTargets()\
-                onDismiss()\
-            },\
-            sheetState = sheetState\
-        ) {' "$FILE"
+# sed -i '/BottomSheetDialog(/,/){/c\
+#         val sheetState = rememberModalBottomSheetState()\
+# \
+#         ModalBottomSheet(\
+#             onDismissRequest = {\
+#                 saveTargets()\
+#                 onDismiss()\
+#             },\
+#             sheetState = sheetState\
+#         ) {' "$FILE"
 
 lunch lineage_blossom-bp4a-eng
 #make clean
