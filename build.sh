@@ -10,7 +10,7 @@ rm -rf vendor/xiaomi/miuicamera
 rm -rf hardware/mediatek
 rm -rf device/mediatek/sepolicy_vndr
 rm -rf hardware/dolby
-rm -rf packages/apps/Settings/Evolver
+rm -rf packages/apps/Evolver
 # rm -rf bootable
 # rm -rf build/make
 # rm -rf frameworks/av
