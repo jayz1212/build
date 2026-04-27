@@ -39,6 +39,7 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<< /d;/^=======/d;/^>>>>>>> /d'
 #./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
 source build/envsetup.sh
+make clean
 git clone https://github.com/jayz1212/v30 --depth 1 -b main prebuilts/vndk/v30/
 export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
@@ -114,5 +115,5 @@ EOF
 
 lunch lineage_blossom-bp4a-eng
 #m installclean
-make clean
+
 m evolution 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
