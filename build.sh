@@ -67,6 +67,7 @@ source build/envsetup.sh
 git clone https://github.com/jayz1212/v30 --depth 1 -b main prebuilts/vndk/v30/
 export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
+expotr WITH_ADB_INSECURE=true
 #export WITH_GMS=false
 rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 
