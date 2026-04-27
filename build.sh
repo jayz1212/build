@@ -113,6 +113,6 @@ PRODUCT_SYSTEM_PROPERTIES += \
 EOF
 
 lunch lineage_blossom-bp4a-eng
-m installclean
-#make clean
+#m installclean
+make clean
 m evolution 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
