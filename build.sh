@@ -93,6 +93,20 @@ sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 #             sheetState = sheetState\
 #         ) {' "$FILE"
 
+
+FILE=device/xiaomi/blossom/device.mk
+
+grep -q "ro.adb.secure=0" "$FILE" || cat >> "$FILE" <<'EOF'
+
+# Auto-added ADB debug props
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.adb.secure=0 \
+    ro.secure=0 \
+    ro.debuggable=1 \
+    persist.sys.usb.config=mtp,adb
+
+EOF
+
 lunch lineage_blossom-bp4a-eng
 m clean
 #make clean
