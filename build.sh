@@ -67,7 +67,7 @@ source build/envsetup.sh
 git clone https://github.com/jayz1212/v30 --depth 1 -b main prebuilts/vndk/v30/
 export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
-export WITH_GMS=false
+#export WITH_GMS=false
 rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 
 sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
