@@ -118,5 +118,5 @@ export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
 export WITH_ADB_INSECURE=true
 export SELINUX_IGNORE_NEVERALLOWS=true
-export BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
+export WITH_GMS=false
 m evolution 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
