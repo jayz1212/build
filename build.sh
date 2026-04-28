@@ -112,6 +112,12 @@ PRODUCT_SYSTEM_PROPERTIES += \
 
 EOF
 
+FIL=device/xiaomi/blossom/BoardConfig.mk
+cat >> "$FIL" <<'EOF'
+
+BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
+
+EOF
 lunch lineage_blossom-bp4a-eng
 #m installclean
 export TARGET_USES_PICO_GAPPS=true
