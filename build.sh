@@ -35,7 +35,7 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 
 
 
-#rm -rf hardware/mediatek/interfaces/hardware/bluetooth
+rm -rf hardware/mediatek/interfaces/hardware/bluetooth
 rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<< /d;/^=======/d;/^>>>>>>> /d'
 #./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
 source build/envsetup.sh
@@ -48,10 +48,10 @@ rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
 sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
 sed -i '/# Besloudness/,+2d' device/xiaomi/blossom/device.mk
-sed -i '/dirty_writeback_centisecs/d' device/mediatek/sepolicy_vndr/basic/non_plat/genfs_contexts
+#sed -i '/dirty_writeback_centisecs/d' device/mediatek/sepolicy_vndr/basic/non_plat/genfs_contexts
 # sed -i '/system_server.*sys_module/d' device/mediatek/sepolicy_vndr/basic/non_plat/system_server.te
-sed -i '/^persist.vendor.audio\.\s/d' device/xiaomi/blossom/sepolicy/vendor/property_contexts
-sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
+#sed -i '/^persist.vendor.audio\.\s/d' device/xiaomi/blossom/sepolicy/vendor/property_contexts
+#sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 
 # DEVICE_DIR="device/xiaomi/blossom/sepolicy/vendor"
 # FILE="$DEVICE_DIR/init.te"
