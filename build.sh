@@ -41,7 +41,7 @@ rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<
 source build/envsetup.sh
 #make clean
 git clone https://github.com/jayz1212/v30 --depth 1 -b main prebuilts/vndk/v30/
-
+rm -rf packages/apps/DolbyAtmos
 #export WITH_GMS=false
 rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
 
@@ -118,7 +118,7 @@ cat >> "$FIL" <<'EOF'
 BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
 
 EOF
-rm -rf packages/apps/DolbyAtmos
+
 lunch lineage_blossom-bp4a-eng
 #m installclean
 export TARGET_USES_PICO_GAPPS=true
