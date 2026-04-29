@@ -125,4 +125,4 @@ export TARGET_ENABLE_BLUR=false
 export WITH_ADB_INSECURE=true
 export SELINUX_IGNORE_NEVERALLOWS=true
 export WITH_GMS=false
-m evolution 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
+m bacon 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
