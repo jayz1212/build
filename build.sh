@@ -118,6 +118,7 @@ cat >> "$FIL" <<'EOF'
 BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
 
 EOF
+rm -rf packages/apps/DolbyAtmos
 lunch lineage_blossom-bp4a-eng
 #m installclean
 export TARGET_USES_PICO_GAPPS=true
