@@ -124,7 +124,17 @@ cat >> "$FIL" <<'EOF'
 BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
 
 EOF
-
+sed -i '/# IMS/,/mediatek-telephony-common/c\# IMS / MTK framework jars\
+PRODUCT_SYSTEM_SERVER_JARS += \\\
+    mediatek-framework \\\
+    mediatek-telecom-common \\\
+    mediatek-telephony-base\
+\
+PRODUCT_PACKAGES += \\\
+    mediatek-common \\\
+    mediatek-ims-base \\\
+    mediatek-ims-common \\\
+    mediatek-telephony-common' device/xiaomi/blossom/device.mk
 
 lunch lineage_blossom-bp4a-eng
 #m installclean
