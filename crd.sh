@@ -121,7 +121,7 @@ EOF
 FIL=device/xiaomi/blossom/BoardConfig.mk
 cat >> "$FIL" <<'EOF'
 
-BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
+
 
 EOF
 sed -i '/# IMS/,/mediatek-telephony-common/c\# IMS / MTK framework jars\
@@ -135,6 +135,59 @@ PRODUCT_PACKAGES += \\\
     mediatek-ims-base \\\
     mediatek-ims-common \\\
     mediatek-telephony-common' device/xiaomi/blossom/device.mk
+
+
+#####################################################
+cd device/xiaomi/blossom && mkdir -p shims && cat > shims/Android.bp <<'EOF'
+cc_library_shared {
+    name: "libshim_base",
+    vendor: true,
+    srcs: ["libshim_base.cpp"],
+    stl: "c++_shared",
+}
+
+cc_library_shared {
+    name: "libshim_taskprofile",
+    vendor: true,
+    srcs: ["libshim_taskprofile.cpp"],
+    stl: "none",
+}
+
+cc_library_shared {
+    name: "libshim_processgroup",
+    vendor: true,
+    srcs: ["libshim_processgroup.cpp"],
+    stl: "none",
+}
+EOF
+cat > shims/libshim_base.cpp <<'EOF'
+#include <string>
+namespace android {
+namespace base {
+std::string Basename(const std::string& path) {
+    size_t pos = path.find_last_of('/');
+    if (pos == std::string::npos) return path;
+    return path.substr(pos + 1);
+}
+}}
+EOF
+cat > shims/libshim_taskprofile.cpp <<'EOF'
+extern "C" void SetTaskProfiles(...) {}
+extern "C" void SetProcessProfiles(...) {}
+EOF
+cat > shims/libshim_processgroup.cpp <<'EOF'
+extern "C" int killProcessGroup(...) { return 0; }
+extern "C" int sendSignalToProcessGroup(...) { return 0; }
+EOF
+grep -q "libshim_base" device.mk || printf '\nPRODUCT_PACKAGES += \\\n    libshim_base \\\n    libshim_taskprofile \\\n    libshim_processgroup\n' >> device.mk
+grep -q "TARGET_LD_SHIM_LIBS" BoardConfig.mk || printf '\nTARGET_LD_SHIM_LIBS += \\\n    /vendor/lib/libnvram.so|libshim_base.so \\\n    /vendor/lib64/libnvram.so|libshim_base.so \\\n    /vendor/lib/libsysenv.so|libshim_base.so \\\n    /vendor/lib64/libsysenv.so|libshim_base.so \\\n    /vendor/lib/libutils-v30.so|libshim_taskprofile.so \\\n    /vendor/lib64/libutils-v30.so|libshim_taskprofile.so \\\n    /vendor/lib/libprocessgroup.so|libshim_processgroup.so\n' >> BoardConfig.mk
+grep -q "libsink.so" proprietary-files.txt || printf '\nsystem_ext/lib/libsink.so\nsystem_ext/lib64/libsink.so\n' >> proprietary-files.txt
+[ -f manifest.xml ] && sed -i '/android.hardware.biometrics.fingerprint/,+8 s/^/<!-- /;/android.hardware.biometrics.fingerprint/,+8 s/$/ -->/' manifest.xml || true
+echo "Patch complete. Now run: ./extract-files.sh && make installclean && lunch lineage_blossom-bp4a-eng && mka bacon -j\$(nproc)"
+#####################################
+
+
+    
 
 lunch lineage_blossom-bp4a-eng
 #m installclean
