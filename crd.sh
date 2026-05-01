@@ -138,5 +138,5 @@ PRODUCT_PACKAGES += \\\
 
 lunch lineage_blossom-bp4a-eng
 #m installclean
-
+make clean
 m bacon 2>&1 | tee build1.log && curl -F "file=@build1.log" https://temp.sh/upload
