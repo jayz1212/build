@@ -184,6 +184,7 @@ grep -q "TARGET_LD_SHIM_LIBS" BoardConfig.mk || printf '\nTARGET_LD_SHIM_LIBS +=
 grep -q "libsink.so" proprietary-files.txt || printf '\nsystem_ext/lib/libsink.so\nsystem_ext/lib64/libsink.so\n' >> proprietary-files.txt
 [ -f manifest.xml ] && sed -i '/android.hardware.biometrics.fingerprint/,+8 s/^/<!-- /;/android.hardware.biometrics.fingerprint/,+8 s/$/ -->/' manifest.xml || true
 echo "Patch complete. Now run: ./extract-files.sh && make installclean && lunch lineage_blossom-bp4a-eng && mka bacon -j\$(nproc)"
+cd -
 #####################################
 
 
