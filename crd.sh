@@ -138,71 +138,137 @@ PRODUCT_PACKAGES += \\\
 
 
 #####################################################
-cd device/xiaomi/blossom && \
-rm -rf shims && \
-mkdir -p libshims && \
-
-# ---- overwrite libshim_base.cpp ----
-cat > libshims/libshim_base.cpp <<'EOF'
-#include <string>
-
-namespace android {
-namespace base {
-
-std::string Basename(const std::string& path) {
-    size_t pos = path.find_last_of('/');
-    if (pos == std::string::npos) return path;
-    return path.substr(pos + 1);
+rm -rf device/xiaomi/blossom/shims && mkdir -p device/xiaomi/blossom/shims && cat > device/xiaomi/blossom/shims/Android.bp <<'EOF'
+cc_library_shared {
+    name: "libshim_base",
+    vendor: true,
+    compile_multilib: "both",
+    srcs: ["libshim_base.cpp"],
+    shared_libs: ["libbase","liblog"],
 }
-
-}
-}
-EOF
-
-# ---- create taskprofile shim ----
-cat > libshims/libshim_taskprofile.cpp <<'EOF'
-extern "C" void SetTaskProfiles(...) {}
-extern "C" void SetProcessProfiles(...) {}
-EOF
-
-# ---- create processgroup shim ----
-cat > libshims/libshim_processgroup.cpp <<'EOF'
-extern "C" int killProcessGroup(...) { return 0; }
-extern "C" int sendSignalToProcessGroup(...) { return 0; }
-EOF
-
-# ---- append new modules only if missing ----
-grep -q 'name: "libshim_taskprofile"' libshims/Android.bp || cat >> libshims/Android.bp <<'EOF'
-
 cc_library_shared {
     name: "libshim_taskprofile",
     vendor: true,
+    compile_multilib: "both",
     srcs: ["libshim_taskprofile.cpp"],
-    stl: "none",
+    shared_libs: ["liblog"],
 }
-
 cc_library_shared {
     name: "libshim_processgroup",
     vendor: true,
+    compile_multilib: "both",
     srcs: ["libshim_processgroup.cpp"],
-    stl: "none",
+    shared_libs: ["liblog"],
+}
+cc_library_shared {
+    name: "libshim_audio",
+    vendor: true,
+    compile_multilib: "both",
+    srcs: ["libshim_audio.cpp"],
+    shared_libs: ["liblog","libutils"],
+}
+cc_library_shared {
+    name: "libshim_vtservice",
+    vendor: true,
+    compile_multilib: "32",
+    srcs: ["libshim_vtservice.cpp"],
+    shared_libs: ["liblog","libbinder","libutils"],
+}
+cc_prebuilt_library_shared {
+    name: "libsink",
+    vendor: true,
+    compile_multilib: "32",
+    srcs: ["proprietary/lib/libsink.so"],
+    strip: { none: true },
 }
 EOF
 
-# ---- add packages ----
-grep -q "libshim_taskprofile" device.mk || printf '\nPRODUCT_PACKAGES += \\\n    libshim_taskprofile \\\n    libshim_processgroup\n' >> device.mk
+cat > device/xiaomi/blossom/shims/libshim_base.cpp <<'EOF'
+#include <string>
+namespace android {
+namespace base {
+std::string Basename(const std::string& path) {
+    size_t p = path.find_last_of('/');
+    return (p == std::string::npos) ? path : path.substr(p + 1);
+}
+}
+}
+EOF
 
-# ---- add ld shims ----
-grep -q "libshim_taskprofile.so" BoardConfig.mk || printf '\nTARGET_LD_SHIM_LIBS += \\\n    /vendor/lib/libnvram.so|libshim_base.so \\\n    /vendor/lib64/libnvram.so|libshim_base.so \\\n    /vendor/lib/libsysenv.so|libshim_base.so \\\n    /vendor/lib64/libsysenv.so|libshim_base.so \\\n    /vendor/lib/libutils-v30.so|libshim_taskprofile.so \\\n    /vendor/lib64/libutils-v30.so|libshim_taskprofile.so \\\n    /vendor/lib/libprocessgroup.so|libshim_processgroup.so\n' >> BoardConfig.mk
+cat > device/xiaomi/blossom/shims/libshim_taskprofile.cpp <<'EOF'
+#include <stddef.h>
+extern "C" int SetTaskProfiles(int, const int*, size_t, bool) { return 0; }
+extern "C" int SetProcessProfiles(int, const int*, size_t, bool) { return 0; }
+EOF
 
-# ---- add missing blobs ----
-grep -q "libsink.so" proprietary-files.txt || printf '\nsystem_ext/lib/libsink.so\nsystem_ext/lib64/libsink.so\n' >> proprietary-files.txt
+cat > device/xiaomi/blossom/shims/libshim_processgroup.cpp <<'EOF'
+extern "C" int set_cpuset_policy(int, int) { return 0; }
+extern "C" int set_sched_policy(int, int) { return 0; }
+EOF
 
-# ---- disable fingerprint hal (safe best-effort) ----
-[ -f manifest.xml ] && sed -i '/android.hardware.biometrics.fingerprint/,+8 s/^/<!-- /;/android.hardware.biometrics.fingerprint/,+8 s/$/ -->/' manifest.xml || true
+cat > device/xiaomi/blossom/shims/libshim_audio.cpp <<'EOF'
+extern "C" void _ZN7android23AudioSystemCompatShimEv() {}
+extern "C" int property_get(const char*, char*, const char*) { return 0; }
+EOF
 
-cd -
-./extract-files.sh
+cat > device/xiaomi/blossom/shims/libshim_vtservice.cpp <<'EOF'
+extern "C" void _ZN7android10IInterfaceD0Ev() {}
+EOF
+
+grep -q "PRODUCT_PACKAGES +=.*libshim_base" device/xiaomi/blossom/device.mk || cat >> device/xiaomi/blossom/device.mk <<'EOF'
+
+# Final Android16 Blossom Fix Pack
+PRODUCT_PACKAGES += \
+    libshim_base \
+    libshim_taskprofile \
+    libshim_processgroup \
+    libshim_audio \
+    libshim_vtservice \
+    libsink
+
+PRODUCT_PACKAGES_REMOVE += \
+    audio.primary.default \
+    android.hardware.biometrics.fingerprint@2.1-service
+EOF
+
+sed -i '/TARGET_LD_SHIM_LIBS/,$d' device/xiaomi/blossom/BoardConfig.mk
+
+cat >> device/xiaomi/blossom/BoardConfig.mk <<'EOF'
+
+# Final linker shims
+TARGET_LD_SHIM_LIBS += \
+    /vendor/lib/libnvram.so|libshim_base.so \
+    /vendor/lib64/libnvram.so|libshim_base.so \
+    /vendor/lib/libsysenv.so|libshim_base.so \
+    /vendor/lib64/libsysenv.so|libshim_base.so \
+    /vendor/lib/libutils-v30.so|libshim_taskprofile.so \
+    /vendor/lib64/libutils-v30.so|libshim_taskprofile.so \
+    /vendor/lib/libprocessgroup.so|libshim_processgroup.so \
+    /vendor/lib64/libprocessgroup.so|libshim_processgroup.so \
+    /vendor/lib/hw/audio.primary.mt6765.so|libshim_audio.so \
+    /vendor/lib64/hw/audio.primary.mt6765.so|libshim_audio.so \
+    /system_ext/lib/libimsma.so|libsink.so \
+    /system_ext/lib/libimsma.so|libshim_vtservice.so
+
+BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED := true
+TARGET_USES_64_BIT_BINDER := true
+BOARD_USES_LEGACY_ALSA_AUDIO := true
+BOARD_VNDK_VERSION := current
+EOF
+
+mkdir -p device/xiaomi/blossom/sepolicy/vendor
+
+cat > device/xiaomi/blossom/sepolicy/vendor/hal_fix.te <<'EOF'
+allow hal_audio_default vendor_file:file { read open getattr map execute };
+allow hal_audio_default self:process execmem;
+allow hal_fingerprint_default self:process execmem;
+allow hal_camera_default self:process execmem;
+permissive hal_audio_default;
+permissive hal_fingerprint_default;
+EOF
+
+echo "DONE. NOW BUILD:"
+echo "make installclean && source build/envsetup.sh && lunch lineage_blossom-userdebug && mka bacon -j16"
 #####################################
 
 
