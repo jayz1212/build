@@ -138,14 +138,27 @@ PRODUCT_PACKAGES += \\\
 
 
 #####################################################
-rm -rf device/xiaomi/blossom/shims && mkdir -p device/xiaomi/blossom/shims && cat > device/xiaomi/blossom/shims/Android.bp <<'EOF'
+# FULL BLOSSOM ANDROID16 FIX PACK (removes conflicting old libshims and keeps new shims)
+
+rm -rf device/xiaomi/blossom/libshims
+rm -rf device/xiaomi/blossom/shims
+mkdir -p device/xiaomi/blossom/shims
+
+# -------------------------------------------------------------------
+# Android.bp
+# -------------------------------------------------------------------
+cat > device/xiaomi/blossom/shims/Android.bp <<'EOF'
 cc_library_shared {
     name: "libshim_base",
     vendor: true,
     compile_multilib: "both",
     srcs: ["libshim_base.cpp"],
-    shared_libs: ["libbase","liblog"],
+    shared_libs: [
+        "libbase",
+        "liblog",
+    ],
 }
+
 cc_library_shared {
     name: "libshim_taskprofile",
     vendor: true,
@@ -153,6 +166,7 @@ cc_library_shared {
     srcs: ["libshim_taskprofile.cpp"],
     shared_libs: ["liblog"],
 }
+
 cc_library_shared {
     name: "libshim_processgroup",
     vendor: true,
@@ -160,62 +174,110 @@ cc_library_shared {
     srcs: ["libshim_processgroup.cpp"],
     shared_libs: ["liblog"],
 }
+
 cc_library_shared {
     name: "libshim_audio",
     vendor: true,
     compile_multilib: "both",
     srcs: ["libshim_audio.cpp"],
-    shared_libs: ["liblog","libutils"],
+    shared_libs: [
+        "liblog",
+        "libutils",
+    ],
 }
+
 cc_library_shared {
     name: "libshim_vtservice",
     vendor: true,
     compile_multilib: "32",
     srcs: ["libshim_vtservice.cpp"],
-    shared_libs: ["liblog","libbinder","libutils"],
+    shared_libs: [
+        "liblog",
+        "libbinder",
+        "libutils",
+    ],
 }
+
 cc_prebuilt_library_shared {
     name: "libsink",
     vendor: true,
     compile_multilib: "32",
     srcs: ["proprietary/lib/libsink.so"],
-    strip: { none: true },
+    strip: {
+        none: true,
+    },
 }
 EOF
 
+# -------------------------------------------------------------------
+# libshim_base.cpp
+# -------------------------------------------------------------------
 cat > device/xiaomi/blossom/shims/libshim_base.cpp <<'EOF'
 #include <string>
+
 namespace android {
 namespace base {
+
 std::string Basename(const std::string& path) {
     size_t p = path.find_last_of('/');
-    return (p == std::string::npos) ? path : path.substr(p + 1);
+    if (p == std::string::npos) return path;
+    return path.substr(p + 1);
 }
+
 }
 }
 EOF
 
+# -------------------------------------------------------------------
+# libshim_taskprofile.cpp
+# -------------------------------------------------------------------
 cat > device/xiaomi/blossom/shims/libshim_taskprofile.cpp <<'EOF'
 #include <stddef.h>
-extern "C" int SetTaskProfiles(int, const int*, size_t, bool) { return 0; }
-extern "C" int SetProcessProfiles(int, const int*, size_t, bool) { return 0; }
+
+extern "C" int SetTaskProfiles(int, const int*, size_t, bool) {
+    return 0;
+}
+
+extern "C" int SetProcessProfiles(int, const int*, size_t, bool) {
+    return 0;
+}
 EOF
 
+# -------------------------------------------------------------------
+# libshim_processgroup.cpp
+# -------------------------------------------------------------------
 cat > device/xiaomi/blossom/shims/libshim_processgroup.cpp <<'EOF'
-extern "C" int set_cpuset_policy(int, int) { return 0; }
-extern "C" int set_sched_policy(int, int) { return 0; }
+extern "C" int set_cpuset_policy(int, int) {
+    return 0;
+}
+
+extern "C" int set_sched_policy(int, int) {
+    return 0;
+}
 EOF
 
+# -------------------------------------------------------------------
+# libshim_audio.cpp
+# -------------------------------------------------------------------
 cat > device/xiaomi/blossom/shims/libshim_audio.cpp <<'EOF'
 extern "C" void _ZN7android23AudioSystemCompatShimEv() {}
-extern "C" int property_get(const char*, char*, const char*) { return 0; }
+
+extern "C" int property_get(const char*, char*, const char*) {
+    return 0;
+}
 EOF
 
+# -------------------------------------------------------------------
+# libshim_vtservice.cpp
+# -------------------------------------------------------------------
 cat > device/xiaomi/blossom/shims/libshim_vtservice.cpp <<'EOF'
 extern "C" void _ZN7android10IInterfaceD0Ev() {}
 EOF
 
-grep -q "PRODUCT_PACKAGES +=.*libshim_base" device/xiaomi/blossom/device.mk || cat >> device/xiaomi/blossom/device.mk <<'EOF'
+# -------------------------------------------------------------------
+# device.mk patch
+# -------------------------------------------------------------------
+grep -q "Final Android16 Blossom Fix Pack" device/xiaomi/blossom/device.mk || cat >> device/xiaomi/blossom/device.mk <<'EOF'
 
 # Final Android16 Blossom Fix Pack
 PRODUCT_PACKAGES += \
@@ -231,6 +293,9 @@ PRODUCT_PACKAGES_REMOVE += \
     android.hardware.biometrics.fingerprint@2.1-service
 EOF
 
+# -------------------------------------------------------------------
+# BoardConfig.mk patch
+# -------------------------------------------------------------------
 sed -i '/TARGET_LD_SHIM_LIBS/,$d' device/xiaomi/blossom/BoardConfig.mk
 
 cat >> device/xiaomi/blossom/BoardConfig.mk <<'EOF'
@@ -256,6 +321,9 @@ BOARD_USES_LEGACY_ALSA_AUDIO := true
 BOARD_VNDK_VERSION := current
 EOF
 
+# -------------------------------------------------------------------
+# sepolicy
+# -------------------------------------------------------------------
 mkdir -p device/xiaomi/blossom/sepolicy/vendor
 
 cat > device/xiaomi/blossom/sepolicy/vendor/hal_fix.te <<'EOF'
@@ -263,12 +331,22 @@ allow hal_audio_default vendor_file:file { read open getattr map execute };
 allow hal_audio_default self:process execmem;
 allow hal_fingerprint_default self:process execmem;
 allow hal_camera_default self:process execmem;
+
 permissive hal_audio_default;
 permissive hal_fingerprint_default;
 EOF
 
-echo "DONE. NOW BUILD:"
-echo "make installclean && source build/envsetup.sh && lunch lineage_blossom-userdebug && mka bacon -j16"
+# -------------------------------------------------------------------
+# clean + build
+# -------------------------------------------------------------------
+rm -rf out/soong
+
+echo "DONE."
+echo "Now run:"
+echo "make installclean"
+echo "source build/envsetup.sh"
+echo "lunch lineage_blossom-userdebug"
+echo "mka bacon -j16"
 #####################################
 
 
