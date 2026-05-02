@@ -146,7 +146,6 @@ PRODUCT_PACKAGES += \\\
 # - restores linker shims
 # - ready to compile
 
-set -e
 
 DEVICE=device/xiaomi/blossom
 
