@@ -275,6 +275,6 @@ echo "make installclean && source build/envsetup.sh && lunch lineage_blossom-use
     
 
 lunch lineage_blossom-bp4a-eng
-#m installclean
+make installclean
 #make clean
 m bacon
