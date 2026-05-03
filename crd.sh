@@ -138,37 +138,27 @@ PRODUCT_PACKAGES += \\\
 
 
 #####################################################
-DEVICE=device/xiaomi/blossom
+###############################################
+# FULL BLOSSOM ANDROID 16 / LOS23 FIXPACK
+# Xiaomi Redmi 8A / blossom (MT6765)
+###############################################
 
-echo "== Fixing missing PRODUCT_PACKAGES shim modules =="
+# Run from ROM root:
+# bash blossom_fixpack.sh
 
-# --------------------------------------------------
-# 1. Recreate full shims Android.bp with ALL modules
-# --------------------------------------------------
-cat > $DEVICE/shims/Android.bp <<'EOF'
-cc_library {
+mkdir -p device/xiaomi/blossom/shims/proprietary/lib
+mkdir -p device/xiaomi/blossom/shims/include
+
+########################################################
+# 1. Android.bp
+########################################################
+
+cat > device/xiaomi/blossom/shims/Android.bp <<'EOF'
+cc_library_shared {
     name: "libshim_base",
     vendor: true,
-    srcs: [
-        "libbase/file.cpp",
-        "libbase/logging.cpp",
-        "libbase/strings.cpp",
-    ],
-    shared_libs: ["libbase"],
-}
-
-cc_library_shared {
-    name: "libshim_audio",
-    vendor: true,
-    compile_multilib: "32",
-    srcs: ["libshim_audio.cpp"],
-}
-
-cc_library_shared {
-    name: "libshim_vtservice",
-    vendor: true,
-    compile_multilib: "32",
-    srcs: ["libshim_vtservice.cpp"],
+    srcs: ["libshim_base.cpp"],
+    stl: "c++_shared",
 }
 
 cc_library_shared {
@@ -186,9 +176,14 @@ cc_library_shared {
 }
 
 cc_library_shared {
-    name: "libshim_sensors",
+    name: "libshim_audio",
     vendor: true,
-    srcs: ["libshim_sensors.cpp"],
+    compile_multilib: "32",
+    srcs: ["libshim_audio.cpp"],
+    shared_libs: [
+        "liblog",
+        "libutils",
+    ],
 }
 
 cc_library_shared {
@@ -198,40 +193,192 @@ cc_library_shared {
 }
 
 cc_library_shared {
+    name: "libshim_sensors",
+    vendor: true,
+    srcs: ["libshim_sensors.cpp"],
+}
+
+cc_library_shared {
     name: "libshim_beanpod",
     vendor: true,
-    compile_multilib: "64",
     srcs: ["libshim_beanpod.cpp"],
 }
 
-cc_prebuilt_library_shared {
-    name: "prebuilt_libsink",
-    vendor: true,
+cc_library_shared {
+    name: "libshim_vtservice",
+    system_ext_specific: true,
     compile_multilib: "32",
-    strip: { none: true },
+    srcs: ["libshim_vtservice.cpp"],
+    stl: "c++_shared",
+}
+
+cc_prebuilt_library_shared {
+    name: "libsink",
+    system_ext_specific: true,
+    compile_multilib: "32",
     srcs: ["proprietary/lib/libsink.so"],
+    strip: { none: true },
 }
 EOF
 
-# --------------------------------------------------
-# 2. Create missing source files
-# --------------------------------------------------
-for f in libshim_sensors.cpp libshim_ui.cpp libshim_beanpod.cpp; do
-cat > $DEVICE/shims/$f <<'EOF'
-extern "C" void dummy(){}
+########################################################
+# 2. libshim_base.cpp
+########################################################
+
+cat > device/xiaomi/blossom/shims/libshim_base.cpp <<'EOF'
+#include <string>
+#include <string.h>
+
+namespace android {
+namespace base {
+
+std::string Basename(const std::string& path) {
+    const char* p = path.c_str();
+    const char* b = strrchr(p, '/');
+    return std::string(b ? b + 1 : p);
+}
+
+std::string Dirname(const std::string& path) {
+    const char* p = path.c_str();
+    const char* b = strrchr(p, '/');
+    if (!b) return ".";
+    return std::string(path.c_str(), b - p);
+}
+
+}
+}
 EOF
-done
 
-# --------------------------------------------------
-# 3. Ensure namespace exists
-# --------------------------------------------------
-grep -q "device/xiaomi/blossom/shims" $DEVICE/device.mk || \
-echo 'PRODUCT_SOONG_NAMESPACES += device/xiaomi/blossom/shims' >> $DEVICE/device.mk
+########################################################
+# 3. taskprofile shim
+########################################################
 
-# --------------------------------------------------
-# 4. Clean stale soong state
-# --------------------------------------------------
-rm -rf out/soong out/.module_paths
+cat > device/xiaomi/blossom/shims/libshim_taskprofile.cpp <<'EOF'
+#include <vector>
+#include <string>
+
+extern "C" bool SetTaskProfiles(int, const std::vector<std::string>&, bool) {
+    return true;
+}
+
+extern "C" bool SetProcessProfiles(int, const std::vector<std::string>&, bool) {
+    return true;
+}
+EOF
+
+########################################################
+# 4. processgroup shim
+########################################################
+
+cat > device/xiaomi/blossom/shims/libshim_processgroup.cpp <<'EOF'
+extern "C" void createProcessGroup() {}
+extern "C" void killProcessGroup() {}
+EOF
+
+########################################################
+# 5. audio shim
+########################################################
+
+cat > device/xiaomi/blossom/shims/libshim_audio.cpp <<'EOF'
+extern "C" void _ZN7android23AudioSystemLegacyInitEv() {}
+extern "C" void _ZN7android18AudioParameterInitEv() {}
+EOF
+
+########################################################
+# 6. sensors shim
+########################################################
+
+cat > device/xiaomi/blossom/shims/libshim_sensors.cpp <<'EOF'
+extern "C" void sensorsshim() {}
+EOF
+
+########################################################
+# 7. ui shim
+########################################################
+
+cat > device/xiaomi/blossom/shims/libshim_ui.cpp <<'EOF'
+extern "C" void uishim() {}
+EOF
+
+########################################################
+# 8. beanpod shim
+########################################################
+
+cat > device/xiaomi/blossom/shims/libshim_beanpod.cpp <<'EOF'
+extern "C" void beanpodshim() {}
+EOF
+
+########################################################
+# 9. vtservice shim
+########################################################
+
+cat > device/xiaomi/blossom/shims/libshim_vtservice.cpp <<'EOF'
+extern "C" void vtserviceshim() {}
+EOF
+
+########################################################
+# 10. fake libsink
+########################################################
+
+cat > device/xiaomi/blossom/shims/proprietary/lib/libsink.c <<'EOF'
+void sink(){}
+EOF
+
+clang -m32 -shared -fPIC \
+device/xiaomi/blossom/shims/proprietary/lib/libsink.c \
+-o device/xiaomi/blossom/shims/proprietary/lib/libsink.so
+
+rm device/xiaomi/blossom/shims/proprietary/lib/libsink.c
+
+########################################################
+# 11. BoardConfig append
+########################################################
+
+sed -i '/TARGET_LD_SHIM_LIBS/,$d' device/xiaomi/blossom/BoardConfig.mk
+
+cat >> device/xiaomi/blossom/BoardConfig.mk <<'EOF'
+
+TARGET_LD_SHIM_LIBS += \
+    /vendor/lib/libnvram.so|libshim_base.so \
+    /vendor/lib64/libnvram.so|libshim_base.so \
+    /vendor/lib/libsysenv.so|libshim_base.so \
+    /vendor/lib64/libsysenv.so|libshim_base.so \
+    /vendor/lib/libutils-v30.so|libshim_taskprofile.so \
+    /vendor/lib64/libutils-v30.so|libshim_taskprofile.so \
+    /vendor/lib/libprocessgroup.so|libshim_processgroup.so \
+    /vendor/lib64/libprocessgroup.so|libshim_processgroup.so \
+    /vendor/lib/hw/audio.primary.mt6765.so|libshim_audio.so \
+    /system_ext/lib/libimsma.so|libsink.so \
+    /system_ext/lib/libimsma.so|libshim_vtservice.so
+
+BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED := true
+TARGET_USES_64_BIT_BINDER := true
+BOARD_USES_LEGACY_ALSA_AUDIO := true
+BOARD_VNDK_VERSION := current
+EOF
+
+########################################################
+# 12. lineage_blossom.mk fix
+########################################################
+
+grep -q libshim_ui device/xiaomi/blossom/lineage_blossom.mk || cat >> device/xiaomi/blossom/lineage_blossom.mk <<'EOF'
+
+PRODUCT_PACKAGES += \
+    libshim_base \
+    libshim_taskprofile \
+    libshim_processgroup \
+    libshim_audio \
+    libshim_ui \
+    libshim_sensors \
+    libshim_beanpod \
+    libshim_vtservice \
+    libsink
+EOF
+
+########################################################
+# DONE
+########################################################
+
 #####################################
 
 
@@ -239,5 +386,5 @@ rm -rf out/soong out/.module_paths
 
 lunch lineage_blossom-bp4a-eng
 make installclean
-#make clean
+make clean
 m bacon
