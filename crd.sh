@@ -138,29 +138,13 @@ PRODUCT_PACKAGES += \\\
 
 
 #####################################################
-# RUN FROM ROM ROOT
-# This patches Blossom automatically:
-# - applies FINAL BoardConfig fixes
-# - removes duplicate shim conflicts
-# - fixes missing libsink.so
-# - restores linker shims
-# - ready to compile
-
-
 DEVICE=device/xiaomi/blossom
 
-echo "==== BLOSSOM FINAL AUTO FIX START ===="
+echo "== Fixing missing PRODUCT_PACKAGES shim modules =="
 
-# -------------------------------------------------
-# 1. REMOVE DUPLICATE SHIMS
-# -------------------------------------------------
-rm -rf $DEVICE/libshims
-mkdir -p $DEVICE/shims/proprietary/lib
-mkdir -p $DEVICE/shims/libbase
-
-# -------------------------------------------------
-# 2. CREATE CLEAN SHIMS Android.bp
-# -------------------------------------------------
+# --------------------------------------------------
+# 1. Recreate full shims Android.bp with ALL modules
+# --------------------------------------------------
 cat > $DEVICE/shims/Android.bp <<'EOF'
 cc_library {
     name: "libshim_base",
@@ -201,6 +185,25 @@ cc_library_shared {
     stl: "none",
 }
 
+cc_library_shared {
+    name: "libshim_sensors",
+    vendor: true,
+    srcs: ["libshim_sensors.cpp"],
+}
+
+cc_library_shared {
+    name: "libshim_ui",
+    vendor: true,
+    srcs: ["libshim_ui.cpp"],
+}
+
+cc_library_shared {
+    name: "libshim_beanpod",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["libshim_beanpod.cpp"],
+}
+
 cc_prebuilt_library_shared {
     name: "prebuilt_libsink",
     vendor: true,
@@ -210,105 +213,25 @@ cc_prebuilt_library_shared {
 }
 EOF
 
-# -------------------------------------------------
-# 3. SHIM SOURCES
-# -------------------------------------------------
-cat > $DEVICE/shims/libshim_audio.cpp <<'EOF'
+# --------------------------------------------------
+# 2. Create missing source files
+# --------------------------------------------------
+for f in libshim_sensors.cpp libshim_ui.cpp libshim_beanpod.cpp; do
+cat > $DEVICE/shims/$f <<'EOF'
 extern "C" void dummy(){}
 EOF
+done
 
-cat > $DEVICE/shims/libshim_vtservice.cpp <<'EOF'
-extern "C" void dummy(){}
-EOF
-
-cat > $DEVICE/shims/libshim_taskprofile.cpp <<'EOF'
-extern "C" void SetTaskProfiles(int,int){}
-extern "C" void set_cpuset_policy(int,int){}
-EOF
-
-cat > $DEVICE/shims/libshim_processgroup.cpp <<'EOF'
-extern "C" int killProcessGroup(int,int,int){return 0;}
-extern "C" int killProcessGroupOnce(int,int,int){return 0;}
-EOF
-
-cat > $DEVICE/shims/libbase/file.cpp <<'EOF'
-#include <string>
-namespace android { namespace base {
-std::string Basename(const std::string& path) {
-size_t pos = path.find_last_of('/');
-return pos == std::string::npos ? path : path.substr(pos + 1);
-}
-}}
-EOF
-
-cat > $DEVICE/shims/libbase/logging.cpp <<'EOF'
-extern "C" void dummy(){}
-EOF
-
-cat > $DEVICE/shims/libbase/strings.cpp <<'EOF'
-extern "C" void dummy(){}
-EOF
-
-# -------------------------------------------------
-# 4. COPY LIBSINK
-# -------------------------------------------------
-if [ -f vendor/xiaomi/blossom/proprietary/system_ext/lib/libsink.so ]; then
-cp vendor/xiaomi/blossom/proprietary/system_ext/lib/libsink.so \
-$DEVICE/shims/proprietary/lib/libsink.so
-elif [ -f vendor/xiaomi/blossom/proprietary/vendor/lib/libsink.so ]; then
-cp vendor/xiaomi/blossom/proprietary/vendor/lib/libsink.so \
-$DEVICE/shims/proprietary/lib/libsink.so
-else
-touch $DEVICE/shims/proprietary/lib/libsink.so
-fi
-
-# -------------------------------------------------
-# 5. PATCH BOARDCONFIG
-# -------------------------------------------------
-sed -i '/TARGET_LD_SHIM_LIBS/,$d' $DEVICE/BoardConfig.mk
-
-cat >> $DEVICE/BoardConfig.mk <<'EOF'
-
-# =====================================================
-# FINAL BLOSSOM COMPAT FIXES
-# =====================================================
-
-BOARD_VNDK_VERSION := current
-TARGET_USES_64_BIT_BINDER := true
-BOARD_USES_LEGACY_ALSA_AUDIO := true
-
-TARGET_LD_SHIM_LIBS += \
-    /vendor/lib/libnvram.so|libshim_base.so \
-    /vendor/lib64/libnvram.so|libshim_base.so \
-    /vendor/lib/libsysenv.so|libshim_base.so \
-    /vendor/lib64/libsysenv.so|libshim_base.so \
-    /vendor/lib/libutils-v30.so|libshim_taskprofile.so \
-    /vendor/lib64/libutils-v30.so|libshim_taskprofile.so \
-    /vendor/lib/libprocessgroup.so|libshim_processgroup.so \
-    /vendor/lib64/libprocessgroup.so|libshim_processgroup.so \
-    /vendor/lib/hw/audio.primary.mt6765.so|libshim_audio.so \
-    /vendor/lib64/hw/audio.primary.mt6765.so|libshim_audio.so \
-    /system_ext/lib/libimsma.so|libsink.so \
-    /system_ext/lib/libimsma.so|libshim_vtservice.so
-EOF
-
-# -------------------------------------------------
-# 6. ADD SOONG NAMESPACE
-# -------------------------------------------------
+# --------------------------------------------------
+# 3. Ensure namespace exists
+# --------------------------------------------------
 grep -q "device/xiaomi/blossom/shims" $DEVICE/device.mk || \
 echo 'PRODUCT_SOONG_NAMESPACES += device/xiaomi/blossom/shims' >> $DEVICE/device.mk
 
-# -------------------------------------------------
-# 7. CLEAN BUILD CACHE
-# -------------------------------------------------
+# --------------------------------------------------
+# 4. Clean stale soong state
+# --------------------------------------------------
 rm -rf out/soong out/.module_paths
-
-echo "==== FIXES APPLIED SUCCESSFULLY ===="
-echo
-echo "NOW BUILD:"
-echo "source build/envsetup.sh"
-echo "lunch lineage_blossom-bp4a-eng"
-echo "mka bacon -j$(nproc)"
 #####################################
 
 
