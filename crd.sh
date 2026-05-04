@@ -64,7 +64,7 @@ sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 
 
 ########################################################
-
+sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 #####################################
 
 
