@@ -67,6 +67,131 @@ sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 #####################################
 
+echo "== Blossom Android 16 Shim Fix =="
+
+DT=device/xiaomi/blossom
+
+# ------------------------------------------------
+# 1. Remove broken libbase shim
+# ------------------------------------------------
+echo "[1] Removing broken libbase shim..."
+rm -rf $DT/libshims/libbase || true
+
+# ------------------------------------------------
+# 2. Create correct libshim_base
+# ------------------------------------------------
+echo "[2] Creating correct libshim_base..."
+
+cat > $DT/libshims/libshim_base.cpp <<'EOF'
+#include <string>
+
+namespace android {
+namespace base {
+
+std::string Basename(const std::string& path) {
+    size_t pos = path.find_last_of("/\\");
+    if (pos == std::string::npos) return path;
+    return path.substr(pos + 1);
+}
+
+} // namespace base
+} // namespace android
+EOF
+
+# ------------------------------------------------
+# 3. Fix Android.bp
+# ------------------------------------------------
+echo "[3] Fixing Android.bp..."
+
+BP=$DT/libshims/Android.bp
+
+# Remove old libshim_base block
+sed -i '/name: "libshim_base"/,/}/d' $BP
+
+# Append correct one
+cat >> $BP <<'EOF'
+
+cc_library_shared {
+    name: "libshim_base",
+    vendor: true,
+    srcs: ["libshim_base.cpp"],
+    shared_libs: ["liblog"],
+    stl: "none",
+}
+EOF
+
+# ------------------------------------------------
+# 4. Fix taskprofile shim
+# ------------------------------------------------
+echo "[4] Fixing taskprofile shim..."
+
+cat > $DT/libshims/libshim_taskprofile.cpp <<'EOF'
+extern "C" void SetTaskProfiles(int tid, const char* profiles) {
+    // stub
+}
+EOF
+
+# ------------------------------------------------
+# 5. Fix audio shim (minimal safe stub)
+# ------------------------------------------------
+echo "[5] Fixing audio shim..."
+
+cat > $DT/libshims/libshim_audio.cpp <<'EOF'
+extern "C" void _ZN7androidAudioSystem15getOutputLatencyEPj19audio_stream_type() {}
+EOF
+
+# ------------------------------------------------
+# 6. Clean lineage_blossom.mk
+# ------------------------------------------------
+echo "[6] Cleaning PRODUCT_PACKAGES..."
+
+MK=$DT/lineage_blossom.mk
+
+sed -i '/libshim_beanpod/d' $MK || true
+sed -i '/libshim_sensors/d' $MK || true
+sed -i '/libshim_ui/d' $MK || true
+
+# ------------------------------------------------
+# 7. Fix BoardConfig.mk
+# ------------------------------------------------
+echo "[7] Rewriting TARGET_LD_SHIM_LIBS..."
+
+BC=$DT/BoardConfig.mk
+
+sed -i '/TARGET_LD_SHIM_LIBS/,$d' $BC
+
+cat >> $BC <<'EOF'
+
+# Final linker shims
+TARGET_LD_SHIM_LIBS += \
+    /vendor/lib/libnvram.so|libshim_base.so \
+    /vendor/lib64/libnvram.so|libshim_base.so \
+    /vendor/lib/libsysenv.so|libshim_base.so \
+    /vendor/lib64/libsysenv.so|libshim_base.so \
+    /vendor/lib/libutils-v30.so|libshim_taskprofile.so \
+    /vendor/lib64/libutils-v30.so|libshim_taskprofile.so \
+    /vendor/lib/libprocessgroup.so|libshim_processgroup.so \
+    /vendor/lib64/libprocessgroup.so|libshim_processgroup.so \
+    /vendor/lib/hw/audio.primary.mt6765.so|libshim_audio.so \
+    /vendor/lib64/hw/audio.primary.mt6765.so|libshim_audio.so
+
+BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED := true
+TARGET_USES_64_BIT_BINDER := true
+BOARD_USES_LEGACY_ALSA_AUDIO := true
+BOARD_VNDK_VERSION := current
+EOF
+
+# ------------------------------------------------
+# DONE
+# ------------------------------------------------
+echo "========================================"
+echo "✔ Fix applied successfully"
+echo "Now run:"
+echo "  mka clean"
+echo "  mka bacon"
+echo "========================================"
+
+#######################################################
 
     
 
