@@ -67,22 +67,89 @@ sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 #####################################
 
-echo "== Blossom Android 16 Shim Fix =="
+echo "== Blossom Android 16 Shim Fix (FINAL) =="
 
 DT=device/xiaomi/blossom
+SHIMS=$DT/libshims
 
 # ------------------------------------------------
-# 1. Remove broken libbase shim
+# 0. Ensure directory exists
 # ------------------------------------------------
-echo "[1] Removing broken libbase shim..."
-rm -rf $DT/libshims/libbase || true
+mkdir -p $SHIMS
 
 # ------------------------------------------------
-# 2. Create correct libshim_base
+# 1. Remove broken/old stuff
 # ------------------------------------------------
-echo "[2] Creating correct libshim_base..."
+echo "[1] Cleaning old shims..."
 
-cat > $DT/libshims/libshim_base.cpp <<'EOF'
+rm -rf $SHIMS/libbase || true
+rm -rf $DT/shims || true
+
+# ------------------------------------------------
+# 2. Write CLEAN Android.bp (no sed hacks)
+# ------------------------------------------------
+echo "[2] Writing clean Android.bp..."
+
+cat > $SHIMS/Android.bp <<'EOF'
+cc_library_shared {
+    name: "libshim_audio",
+    srcs: ["libshim_audio.cpp"],
+    shared_libs: [
+        "libmedia_helper",
+        "libaudioutils",
+    ],
+    vendor: true,
+    compile_multilib: "32",
+}
+
+cc_library_shared {
+    name: "libshim_vtservice",
+    srcs: ["libshim_vtservice.cpp"],
+    compile_multilib: "32",
+    shared_libs: [
+        "libaudioclient",
+        "libgui",
+        "libstagefright",
+        "libutils",
+        "libbinder",
+    ],
+    header_libs: [
+        "libaudioclient_headers",
+        "libmedia_headers",
+        "libmediametrics_headers",
+    ],
+    local_include_dirs: ["include"],
+}
+
+cc_library_shared {
+    name: "libshim_taskprofile",
+    vendor: true,
+    srcs: ["libshim_taskprofile.cpp"],
+    stl: "none",
+}
+
+cc_library_shared {
+    name: "libshim_processgroup",
+    vendor: true,
+    srcs: ["libshim_processgroup.cpp"],
+    stl: "none",
+}
+
+cc_library_shared {
+    name: "libshim_base",
+    vendor: true,
+    srcs: ["libshim_base.cpp"],
+    shared_libs: ["liblog"],
+    stl: "none",
+}
+EOF
+
+# ------------------------------------------------
+# 3. Create shim sources
+# ------------------------------------------------
+echo "[3] Writing shim sources..."
+
+cat > $SHIMS/libshim_base.cpp <<'EOF'
 #include <string>
 
 namespace android {
@@ -98,52 +165,30 @@ std::string Basename(const std::string& path) {
 } // namespace android
 EOF
 
-# ------------------------------------------------
-# 3. Fix Android.bp
-# ------------------------------------------------
-echo "[3] Fixing Android.bp..."
-
-BP=$DT/libshims/Android.bp
-
-# Remove old libshim_base block
-sed -i '/name: "libshim_base"/,/}/d' $BP
-
-# Append correct one
-cat >> $BP <<'EOF'
-
-cc_library_shared {
-    name: "libshim_base",
-    vendor: true,
-    srcs: ["libshim_base.cpp"],
-    shared_libs: ["liblog"],
-    stl: "none",
-}
-EOF
-
-# ------------------------------------------------
-# 4. Fix taskprofile shim
-# ------------------------------------------------
-echo "[4] Fixing taskprofile shim..."
-
-cat > $DT/libshims/libshim_taskprofile.cpp <<'EOF'
+cat > $SHIMS/libshim_taskprofile.cpp <<'EOF'
 extern "C" void SetTaskProfiles(int tid, const char* profiles) {
     // stub
 }
 EOF
 
-# ------------------------------------------------
-# 5. Fix audio shim (minimal safe stub)
-# ------------------------------------------------
-echo "[5] Fixing audio shim..."
+cat > $SHIMS/libshim_processgroup.cpp <<'EOF'
+extern "C" void SetProcessProfiles(int pid, const char* profiles) {
+    // stub
+}
+EOF
 
-cat > $DT/libshims/libshim_audio.cpp <<'EOF'
+cat > $SHIMS/libshim_audio.cpp <<'EOF'
 extern "C" void _ZN7androidAudioSystem15getOutputLatencyEPj19audio_stream_type() {}
 EOF
 
+cat > $SHIMS/libshim_vtservice.cpp <<'EOF'
+extern "C" void dummy_vtservice() {}
+EOF
+
 # ------------------------------------------------
-# 6. Clean lineage_blossom.mk
+# 4. Clean PRODUCT_PACKAGES
 # ------------------------------------------------
-echo "[6] Cleaning PRODUCT_PACKAGES..."
+echo "[4] Cleaning lineage_blossom.mk..."
 
 MK=$DT/lineage_blossom.mk
 
@@ -152,9 +197,9 @@ sed -i '/libshim_sensors/d' $MK || true
 sed -i '/libshim_ui/d' $MK || true
 
 # ------------------------------------------------
-# 7. Fix BoardConfig.mk
+# 5. Rewrite BoardConfig cleanly
 # ------------------------------------------------
-echo "[7] Rewriting TARGET_LD_SHIM_LIBS..."
+echo "[5] Fixing BoardConfig.mk..."
 
 BC=$DT/BoardConfig.mk
 
@@ -180,6 +225,7 @@ TARGET_USES_64_BIT_BINDER := true
 BOARD_USES_LEGACY_ALSA_AUDIO := true
 BOARD_VNDK_VERSION := current
 EOF
+
 
 # ------------------------------------------------
 # DONE
