@@ -66,59 +66,50 @@ sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 ########################################################
 sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 #####################################
-
-echo "== Blossom Android 16 Shim Fix (FINAL) =="
+echo "== Blossom Android 16 FINAL Shim Fix =="
 
 DT=device/xiaomi/blossom
-SHIMS=$DT/libshims
 
 # ------------------------------------------------
-# 0. Ensure directory exists
+# 1. Remove broken libbase shim
 # ------------------------------------------------
-mkdir -p $SHIMS
+echo "[1] Removing broken libbase shim..."
+rm -rf $DT/libshims/libbase || true
 
 # ------------------------------------------------
-# 1. Remove broken/old stuff
+# 2. Create correct libshim_base
 # ------------------------------------------------
-echo "[1] Cleaning old shims..."
+echo "[2] Creating correct libshim_base..."
 
-rm -rf $SHIMS/libbase || true
-rm -rf $DT/shims || true
+cat > $DT/libshims/libshim_base.cpp <<'EOF'
+#include <string>
 
-# ------------------------------------------------
-# 2. Write CLEAN Android.bp (no sed hacks)
-# ------------------------------------------------
-echo "[2] Writing clean Android.bp..."
+namespace android {
+namespace base {
 
-cat > $SHIMS/Android.bp <<'EOF'
-cc_library_shared {
-    name: "libshim_audio",
-    srcs: ["libshim_audio.cpp"],
-    shared_libs: [
-        "libmedia_helper",
-        "libaudioutils",
-    ],
-    vendor: true,
-    compile_multilib: "32",
+std::string Basename(const std::string& path) {
+    size_t pos = path.find_last_of("/\\");
+    if (pos == std::string::npos) return path;
+    return path.substr(pos + 1);
 }
 
+} // namespace base
+} // namespace android
+EOF
+
+# ------------------------------------------------
+# 3. Fix Android.bp cleanly (NO duplicates)
+# ------------------------------------------------
+echo "[3] Rewriting Android.bp..."
+
+cat > $DT/libshims/Android.bp <<'EOF'
+
 cc_library_shared {
-    name: "libshim_vtservice",
-    srcs: ["libshim_vtservice.cpp"],
-    compile_multilib: "32",
-    shared_libs: [
-        "libaudioclient",
-        "libgui",
-        "libstagefright",
-        "libutils",
-        "libbinder",
-    ],
-    header_libs: [
-        "libaudioclient_headers",
-        "libmedia_headers",
-        "libmediametrics_headers",
-    ],
-    local_include_dirs: ["include"],
+    name: "libshim_base",
+    vendor: true,
+    srcs: ["libshim_base.cpp"],
+    shared_libs: ["liblog"],
+    stl: "none",
 }
 
 cc_library_shared {
@@ -136,70 +127,60 @@ cc_library_shared {
 }
 
 cc_library_shared {
-    name: "libshim_base",
+    name: "libshim_audio",
     vendor: true,
-    srcs: ["libshim_base.cpp"],
-    shared_libs: ["liblog"],
-    stl: "none",
+    compile_multilib: "32",
+    srcs: ["libshim_audio.cpp"],
 }
+
 EOF
 
 # ------------------------------------------------
-# 3. Create shim sources
+# 4. Fix taskprofile shim
 # ------------------------------------------------
-echo "[3] Writing shim sources..."
+echo "[4] Fixing taskprofile shim..."
 
-cat > $SHIMS/libshim_base.cpp <<'EOF'
-#include <string>
-
-namespace android {
-namespace base {
-
-std::string Basename(const std::string& path) {
-    size_t pos = path.find_last_of("/\\");
-    if (pos == std::string::npos) return path;
-    return path.substr(pos + 1);
-}
-
-} // namespace base
-} // namespace android
+cat > $DT/libshims/libshim_taskprofile.cpp <<'EOF'
+extern "C" void SetTaskProfiles(int tid, const char* profiles) {}
 EOF
 
-cat > $SHIMS/libshim_taskprofile.cpp <<'EOF'
-extern "C" void SetTaskProfiles(int tid, const char* profiles) {
-    // stub
-}
+# ------------------------------------------------
+# 5. Fix processgroup shim
+# ------------------------------------------------
+echo "[5] Fixing processgroup shim..."
+
+cat > $DT/libshims/libshim_processgroup.cpp <<'EOF'
+extern "C" void SetProcessProfiles(int pid, const char* profiles) {}
 EOF
 
-cat > $SHIMS/libshim_processgroup.cpp <<'EOF'
-extern "C" void SetProcessProfiles(int pid, const char* profiles) {
-    // stub
-}
-EOF
+# ------------------------------------------------
+# 6. Fix audio shim
+# ------------------------------------------------
+echo "[6] Fixing audio shim..."
 
-cat > $SHIMS/libshim_audio.cpp <<'EOF'
+cat > $DT/libshims/libshim_audio.cpp <<'EOF'
 extern "C" void _ZN7androidAudioSystem15getOutputLatencyEPj19audio_stream_type() {}
 EOF
 
-cat > $SHIMS/libshim_vtservice.cpp <<'EOF'
-extern "C" void dummy_vtservice() {}
-EOF
-
 # ------------------------------------------------
-# 4. Clean PRODUCT_PACKAGES
+# 7. FORCE clean PRODUCT_PACKAGES (robust)
 # ------------------------------------------------
-echo "[4] Cleaning lineage_blossom.mk..."
+echo "[7] Cleaning lineage_blossom.mk..."
 
 MK=$DT/lineage_blossom.mk
 
-sed -i '/libshim_beanpod/d' $MK || true
-sed -i '/libshim_sensors/d' $MK || true
-sed -i '/libshim_ui/d' $MK || true
+# Remove ANY line containing bad shims
+sed -i '/libshim_beanpod/d' $MK
+sed -i '/libshim_sensors/d' $MK
+sed -i '/libshim_ui/d' $MK
+
+# Also remove trailing "\" leftovers
+sed -i 's/\\$//' $MK
 
 # ------------------------------------------------
-# 5. Rewrite BoardConfig cleanly
+# 8. Fix BoardConfig
 # ------------------------------------------------
-echo "[5] Fixing BoardConfig.mk..."
+echo "[8] Rewriting BoardConfig shim section..."
 
 BC=$DT/BoardConfig.mk
 
@@ -227,21 +208,11 @@ BOARD_VNDK_VERSION := current
 EOF
 
 
-# ------------------------------------------------
-# DONE
-# ------------------------------------------------
-echo "========================================"
-echo "✔ Fix applied successfully"
-echo "Now run:"
-echo "  mka clean"
-echo "  mka bacon"
-echo "========================================"
-
 #######################################################
 
     
 
 lunch lineage_blossom-bp4a-eng
 make installclean
-
+make clean
 m bacon
