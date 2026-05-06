@@ -174,9 +174,6 @@ sed -i '/libshim_beanpod/d' $MK
 sed -i '/libshim_sensors/d' $MK
 sed -i '/libshim_ui/d' $MK
 
-# Also remove trailing "\" leftovers
-sed -i 's/\\$//' $MK
-
 # ------------------------------------------------
 # 8. Fix BoardConfig
 # ------------------------------------------------
