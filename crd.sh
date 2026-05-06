@@ -167,7 +167,7 @@ EOF
 # ------------------------------------------------
 echo "[7] Cleaning lineage_blossom.mk..."
 
-MK=$DT/lineage_blossom.mk
+MK=$DT/device.mk
 
 # Remove ANY line containing bad shims
 sed -i '/libshim_beanpod/d' $MK
