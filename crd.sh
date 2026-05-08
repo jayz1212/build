@@ -170,9 +170,9 @@ echo "[7] Cleaning lineage_blossom.mk..."
 MK=$DT/device.mk
 
 # Remove ANY line containing bad shims
-sed -i '/# Shims/,+5c\# Shims\
-PRODUCT_PACKAGES += \\\
-    libshim_audio' device/xiaomi/blossom/device.mk
+# sed -i '/# Shims/,+5c\# Shims\
+# PRODUCT_PACKAGES += \\\
+#     libshim_audio' device/xiaomi/blossom/device.mk
 
 # ------------------------------------------------
 # 8. Fix BoardConfig
