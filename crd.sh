@@ -211,5 +211,5 @@ EOF
 
 lunch lineage_blossom-bp4a-eng
 make installclean
-make clean
+#make clean
 m bacon
