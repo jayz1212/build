@@ -176,6 +176,8 @@ PRODUCT_PACKAGES += \\\
     libshim_audio \\\
     libshim_ui' device/xiaomi/blossom/device.mk
 
+cat  device/xiaomi/blossom/device.mk
+
 # ------------------------------------------------
 # 8. Fix BoardConfig
 # ------------------------------------------------
