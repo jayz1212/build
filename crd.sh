@@ -170,7 +170,7 @@ echo "[7] Cleaning lineage_blossom.mk..."
 MK=$DT/device.mk
 
 # Remove ANY line containing bad shims
-sed -i '/# Shims/,+5c\
+sed -i '/# Shims/,+6c\
 # Shims\
 PRODUCT_PACKAGES += \\\
     libshim_audio \\\
