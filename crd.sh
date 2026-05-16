@@ -53,7 +53,8 @@ git clone https://github.com/jayz1212/v30 --depth 1 -b main prebuilts/vndk/v30/
 
 sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
 sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
-sed -i '/# Besloudness/,+2d' device/xiaomi/blossom/device.mk
+#sed -i '/# Besloudness/,+2d' device/xiaomi/blossom/device.mk
+sed -i '/BesLoudness \\/d; /^PRODUCT_PACKAGES += \\\$/N; s/PRODUCT_PACKAGES += \\\n[[:space:]]*MtkInCallService/PRODUCT_PACKAGES += \\\n    MtkInCallService/' device/xiaomi/blossom/device.mk
 sed -i '/# FM Radio/,/RevampedFMRadio/d' device/xiaomi/blossom/device.mk
 sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
 sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/BoardConfig.mk
