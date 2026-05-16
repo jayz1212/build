@@ -16,7 +16,7 @@ rm -rf device/mediatek/sepolicy_vndr
 # rm -rf bootable
 # rm -rf build/make
 # rm -rf frameworks/av
-# rm -rf frameworks/base
+rm -rf frameworks/base
 # rm -rf hardware/google/pixel
 # rm -rf hawrdware/interfaces
 # rm -rf packages/modules/Bluetooth
