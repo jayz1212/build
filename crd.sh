@@ -77,7 +77,7 @@ sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 
 lunch lineage_blossom-bp4a-eng
 make installclean
-#make clean
+make clean # one time
 m bacon
 
 
