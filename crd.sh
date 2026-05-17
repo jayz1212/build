@@ -64,7 +64,8 @@ sed -i '/dirty_writeback_centisecs/d' device/mediatek/sepolicy_vndr/basic/non_pl
 # sed -i '/system_server.*sys_module/d' device/mediatek/sepolicy_vndr/basic/non_plat/system_server.te
 sed -i '/^persist.vendor.audio\.\s/d' device/xiaomi/blossom/sepolicy/vendor/property_contexts
 sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
-
+sed -i '/vendor\.mediatek\.hardware\.mtkcodecservice@1\.1::IMtkCodecService/d' \
+vendor/xiaomi/blossom/proprietary/vendor/etc/init/vendor.mediatek.hardware.mtkcodecservice@1.1-service.rc
 
 ########################################################
 #sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
