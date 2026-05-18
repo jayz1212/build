@@ -66,7 +66,14 @@ sed -i '/^persist.vendor.audio\.\s/d' device/xiaomi/blossom/sepolicy/vendor/prop
 sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
 sed -i '/vendor\.mediatek\.hardware\.mtkcodecservice@1\.1::IMtkCodecService/d' \
 vendor/xiaomi/blossom/proprietary/vendor/etc/init/vendor.mediatek.hardware.mtkcodecservice@1.1-service.rc
-
+sed -i '/<\/compatibility-matrix>/i\    <hal format="hidl" optional="false">\
+        <name>android.hardware.memtrack</name>\
+        <version>1.0</version>\
+        <interface>\
+            <name>IMemtrack</name>\
+            <instance>default</instance>\
+        </interface>\
+    </hal>' path/to/compatibility_matrix.xml
 ########################################################
 #sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 #####################################
