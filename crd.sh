@@ -78,7 +78,7 @@ vendor/xiaomi/blossom/proprietary/vendor/etc/init/vendor.mediatek.hardware.mtkco
 
 lunch lineage_blossom-bp4a-eng
 make installclean
-make clean # one time
+#make clean # one time
 m bacon
 
 
