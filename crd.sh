@@ -73,7 +73,7 @@ sed -i '/<\/compatibility-matrix>/i\    <hal format="hidl" optional="false">\
             <name>IMemtrack</name>\
             <instance>default</instance>\
         </interface>\
-    </hal>' path/to/compatibility_matrix.xml
+    </hal>' device/xiaomi/blossom/compatibility_matrix.xml
 ########################################################
 #sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
 #####################################
