@@ -3,7 +3,7 @@ echo "login dtiven13" >> ~/.netrc
 export PASS=$(cat pass.txt)
 echo "$PASS" >> ~/.netrc
 chmod 600 ~/.netrc  # Important: strict permissions required
-rm -rf test2  # Backup your ZIP file first!
+rm -rf crdroid10  # Backup your ZIP file first!
 git clone https://gitlab.com/dtiven13/test4.git crdroid10
 cd crdroid10
 rm -rf *.zip
