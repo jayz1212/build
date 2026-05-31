@@ -1,0 +1,107 @@
+sudo apt update
+sudo apt install patchelf -y
+
+rm -rf .repo/local_manifests/
+rm -rf .repo/manifests/
+rm -rf device/xiaomi
+rm -rf device/xiaomi/blossom-kernel
+rm -rf vendor/xiaomi
+rm -rf vendor/xiaomi/miuicamera
+rm -rf hardware/mediatek
+rm -rf device/mediatek/sepolicy_vndr
+#rm -rf hardware/dolby
+#rm -rf packages/apps/Settings
+#rm -rf packages/apps/Evolver
+#rm -rf packages/apps/Evolver
+# rm -rf bootable
+# rm -rf build/make
+# rm -rf frameworks/av
+rm -rf frameworks/base
+# rm -rf hardware/google/pixel
+# rm -rf hawrdware/interfaces
+# rm -rf packages/modules/Bluetooth
+#rm -rf vendor
+#rm -rf TMP_PATCHES
+
+
+
+#repo init -u https://github.com/crdroidandroid/android.git -b 16.0 --depth=1 --git-lfs
+repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --git-lfs
+
+git clone https://github.com/jayz1212/local --depth 1 -b evo .repo/local_manifests
+repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
+
+
+/opt/crave/resync.sh
+
+
+
+
+rm -rf hardware/mediatek/interfaces/hardware/bluetooth
+rg -l -0 '<<<<<<<|=======|>>>>>>>' hardware/mediatek | xargs -0 sed -i '/^<<<<<<< /d;/^=======/d;/^>>>>>>> /d'
+#./device/xiaomi/blossom/applyPatches.sh device/xiaomi/blossom/patches
+
+export TARGET_USES_PICO_GAPPS=true
+export TARGET_ENABLE_BLUR=false
+export WITH_ADB_INSECURE=true
+export SELINUX_IGNORE_NEVERALLOWS=true
+export WITH_GMS=false
+source build/envsetup.sh
+#make clean
+git clone https://github.com/jayz1212/v30 --depth 1 -b main prebuilts/vndk/v30/
+
+#export WITH_GMS=false
+#rm -rf hardware/interfaces/biometrics/fingerprint/2.1/default
+
+sed -i '\|$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)|d' device/xiaomi/blossom/lineage_blossom.mk
+sed -i '/# FM Radio/,+2d' device/xiaomi/blossom/device.mk
+#sed -i '/# Besloudness/,+2d' device/xiaomi/blossom/device.mk
+sed -i '/BesLoudness \\/d; /^PRODUCT_PACKAGES += \\\$/N; s/PRODUCT_PACKAGES += \\\n[[:space:]]*MtkInCallService/PRODUCT_PACKAGES += \\\n    MtkInCallService/' device/xiaomi/blossom/device.mk
+sed -i '/# FM Radio/,/RevampedFMRadio/d' device/xiaomi/blossom/device.mk
+sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/rootdir/etc/fstab.mt6765
+sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/BoardConfig.mk
+sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/device.mk
+sed -i '/<<<<<<< HEAD/d;/=======/d;/>>>>>>>/d' device/xiaomi/blossom/Android.bp
+sed -i '/dirty_writeback_centisecs/d' device/mediatek/sepolicy_vndr/basic/non_plat/genfs_contexts
+# sed -i '/system_server.*sys_module/d' device/mediatek/sepolicy_vndr/basic/non_plat/system_server.te
+sed -i '/^persist.vendor.audio\.\s/d' device/xiaomi/blossom/sepolicy/vendor/property_contexts
+sed -i '/ro.vendor.audio\./d' device/xiaomi/blossom/sepolicy/*/property_contexts
+# sed -i '/vendor\.mediatek\.hardware\.mtkcodecservice@1\.1::IMtkCodecService/d' \
+# vendor/xiaomi/blossom/proprietary/vendor/etc/init/vendor.mediatek.hardware.mtkcodecservice@1.1-service.rc
+sed -i '/<\/compatibility-matrix>/i\    <hal format="hidl" optional="false">\
+        <name>android.hardware.memtrack</name>\
+        <version>1.0</version>\
+        <interface>\
+            <name>IMemtrack</name>\
+            <instance>default</instance>\
+        </interface>\
+    </hal>' device/xiaomi/blossom/compatibility_matrix.xml
+
+
+
+    sed -i '/<\/compatibility-matrix>/i\    <hal format="hidl" optional="true">\
+        <name>android.hardware.memtrack</name>\
+        <version>1.0</version>\
+        <interface>\
+            <name>IMemtrack</name>\
+            <instance>default</instance>\
+        </interface>\
+    </hal>' \
+device/xiaomi/blossom/framework_compatibility_matrix.xml
+########################################################
+#sed -i 's/PRODUCT_BOOT_JARS +=/PRODUCT_PACKAGES +=/' device/xiaomi/blossom/device.mk
+#####################################
+
+
+#######################################################
+
+    
+
+lunch lineage_blossom-bp4a-eng
+make installclean
+make clean # one time
+#m bacon
+m evolution
+
+
+

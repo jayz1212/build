@@ -1,0 +1,40 @@
+name: Wipe Git History
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wipe-history:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Create orphan branch
+        run: |
+          git checkout --orphan clean-history
+          git add -A
+          git commit -m "Initial commit"
+
+      - name: Replace main branch
+        run: |
+          git branch -D main || true
+          git branch -m main
+          git push --force origin main
+
+      - name: Delete other branches
+        run: |
+          for branch in $(git branch -r | grep -v 'origin/main' | sed 's|origin/||'); do
+            git push origin --delete "$branch" || true
+          done
