@@ -51,7 +51,7 @@ cd crdroid10
 rm -rf *.zip
 git add .
 git commit -m "Add ROM zip via LFS"
-git gc --prune=30.minutes.ago
+
 # Push
 git push origin main
 cd -
