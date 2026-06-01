@@ -1,6 +1,6 @@
 #!/bin/bash
 export PASS=$(cat pass.txt)
-GITLAB_URL="https://gitlab.com/dtiven13
+GITLAB_URL="https://gitlab.com/dtiven13"
 TOKEN="$PASS"
 PROJECT_ID="82751713"
 PROJECT_NAME="test6"
