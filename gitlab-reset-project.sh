@@ -77,19 +77,6 @@ fi
 
 print_success "Project found: $PROJECT_NAME (ID: $PROJECT_ID)"
 echo ""
-
-# Confirm deletion
-print_warning "About to DELETE project: $PROJECT_NAME"
-print_warning "This action CANNOT be undone!"
-echo ""
-read -p "Type the project name '$PROJECT_NAME' to confirm: " CONFIRM
-
-if [ "$CONFIRM" != "$PROJECT_NAME" ]; then
-    print_error "Confirmation failed. Aborted."
-    exit 1
-fi
-
-echo ""
 print_status "Deleting project..."
 
 # Delete project
