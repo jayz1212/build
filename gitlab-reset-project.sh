@@ -111,16 +111,24 @@ confirm_deletion() {
 delete_project() {
     print_status "Deleting project..."
     
-    DELETE_RESPONSE=$(curl -s -X DELETE --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+    HTTP_CODE=$(curl -s -w "%{http_code}" -o /tmp/delete_response.json \
+        -X DELETE --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
         "$GITLAB_URL/api/v4/projects/$PROJECT_ID")
     
-    if echo "$DELETE_RESPONSE" | jq -e '.message' &>/dev/null; then
-        ERROR_MSG=$(echo "$DELETE_RESPONSE" | jq -r '.message')
-        print_error "Failed to delete project: $ERROR_MSG"
+    DELETE_RESPONSE=$(cat /tmp/delete_response.json)
+    
+    # 202 Accepted is success for deletion (async processing)
+    if [ "$HTTP_CODE" != "202" ] && [ "$HTTP_CODE" != "204" ]; then
+        if echo "$DELETE_RESPONSE" | jq -e '.message' &>/dev/null 2>/dev/null; then
+            ERROR_MSG=$(echo "$DELETE_RESPONSE" | jq -r '.message')
+            print_error "Failed to delete project (HTTP $HTTP_CODE): $ERROR_MSG"
+        else
+            print_error "Failed to delete project (HTTP $HTTP_CODE)"
+        fi
         exit 1
     fi
     
-    print_success "Project deleted successfully"
+    print_success "Project deletion initiated (HTTP $HTTP_CODE)"
     
     # Wait for deletion to complete
     print_status "Waiting for deletion to complete (max 30 seconds)..."
@@ -129,7 +137,7 @@ delete_project() {
         CHECK=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             "$GITLAB_URL/api/v4/projects/$PROJECT_ID" 2>/dev/null)
         
-        if echo "$CHECK" | jq -e '.message' &>/dev/null; then
+        if echo "$CHECK" | jq -e '.message' &>/dev/null 2>/dev/null; then
             print_success "Project deletion confirmed"
             return 0
         fi
