@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GitLab Project Reset Script
+# GitLab Project Reset Script (Fixed with jq)
 # Deletes a GitLab project and recreates it from scratch
 
 set -e
@@ -36,43 +36,27 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to display usage
-usage() {
-    cat << EOF
-Usage: $0 [PROJECT_ID] [PROJECT_NAME] [VISIBILITY]
-
-Arguments:
-  PROJECT_ID        - GitLab project ID (numeric ID from project settings)
-  PROJECT_NAME      - Name for the recreated project (optional, defaults to original)
-  VISIBILITY        - Project visibility: private, internal, or public (default: private)
-
-Environment Variables:
-  GITLAB_URL        - GitLab instance URL (default: https://gitlab.com)
-  GITLAB_TOKEN      - GitLab personal access token (required)
-
-Examples:
-  $0 12345 my-project private
-  GITLAB_TOKEN=glpat-xxx PROJECT_ID=12345 $0
-
-Interactive mode (no arguments):
-  $0
-
-EOF
-    exit 1
+# Check if jq is installed
+check_jq() {
+    if ! command -v jq &> /dev/null; then
+        print_error "jq is required but not installed"
+        echo "Install it with: apt-get install jq or brew install jq"
+        exit 1
+    fi
 }
 
 # Function to validate inputs
 validate_inputs() {
     if [ -z "$GITLAB_TOKEN" ]; then
         print_error "GITLAB_TOKEN environment variable is not set"
-        echo "Generate a token at: $GITLAB_URL/-/profile/personal_access_tokens"
-        echo "Required scopes: api, read_api, write_repository"
+        echo "Set it with: export GITLAB_TOKEN=glpat-xxxxxxxxxxxxx"
         exit 1
     fi
 
     if [ -z "$PROJECT_ID" ]; then
         print_error "PROJECT_ID is required"
-        usage
+        echo "Usage: $0 PROJECT_ID [PROJECT_NAME] [VISIBILITY]"
+        exit 1
     fi
 
     # Validate PROJECT_ID is numeric
@@ -89,21 +73,23 @@ get_project_info() {
     PROJECT_INFO=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
         "$GITLAB_URL/api/v4/projects/$PROJECT_ID")
     
-    if echo "$PROJECT_INFO" | grep -q "message.*404"; then
-        print_error "Project not found with ID: $PROJECT_ID"
+    # Check for errors using jq
+    if echo "$PROJECT_INFO" | jq -e '.message' &>/dev/null; then
+        ERROR_MSG=$(echo "$PROJECT_INFO" | jq -r '.message')
+        print_error "Failed to fetch project: $ERROR_MSG"
         exit 1
     fi
     
-    if echo "$PROJECT_INFO" | grep -q "error"; then
-        print_error "Failed to fetch project info: $(echo $PROJECT_INFO | grep -o '"message":"[^"]*"')"
+    # Extract project details using jq
+    CURRENT_NAME=$(echo "$PROJECT_INFO" | jq -r '.name')
+    CURRENT_VISIBILITY=$(echo "$PROJECT_INFO" | jq -r '.visibility')
+    CURRENT_DESCRIPTION=$(echo "$PROJECT_INFO" | jq -r '.description // empty')
+    NAMESPACE_ID=$(echo "$PROJECT_INFO" | jq -r '.namespace.id')
+    
+    if [ "$CURRENT_NAME" = "null" ] || [ -z "$CURRENT_NAME" ]; then
+        print_error "Could not find project with ID: $PROJECT_ID"
         exit 1
     fi
-    
-    # Extract current project details
-    CURRENT_NAME=$(echo "$PROJECT_INFO" | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4)
-    CURRENT_VISIBILITY=$(echo "$PROJECT_INFO" | grep -o '"visibility":"[^"]*"' | cut -d'"' -f4)
-    CURRENT_DESCRIPTION=$(echo "$PROJECT_INFO" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
-    NAMESPACE_ID=$(echo "$PROJECT_INFO" | grep -o '"namespace":{"id":[0-9]*' | grep -o '[0-9]*$')
     
     print_success "Project found: $CURRENT_NAME"
 }
@@ -128,8 +114,9 @@ delete_project() {
     DELETE_RESPONSE=$(curl -s -X DELETE --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
         "$GITLAB_URL/api/v4/projects/$PROJECT_ID")
     
-    if echo "$DELETE_RESPONSE" | grep -q "error"; then
-        print_error "Failed to delete project: $DELETE_RESPONSE"
+    if echo "$DELETE_RESPONSE" | jq -e '.message' &>/dev/null; then
+        ERROR_MSG=$(echo "$DELETE_RESPONSE" | jq -r '.message')
+        print_error "Failed to delete project: $ERROR_MSG"
         exit 1
     fi
     
@@ -139,9 +126,10 @@ delete_project() {
     print_status "Waiting for deletion to complete (max 30 seconds)..."
     for i in {1..30}; do
         sleep 1
-        curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-            "$GITLAB_URL/api/v4/projects/$PROJECT_ID" > /dev/null 2>&1
-        if [ $? -ne 0 ]; then
+        CHECK=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            "$GITLAB_URL/api/v4/projects/$PROJECT_ID" 2>/dev/null)
+        
+        if echo "$CHECK" | jq -e '.message' &>/dev/null; then
             print_success "Project deletion confirmed"
             return 0
         fi
@@ -173,14 +161,17 @@ EOF
         --data "$PAYLOAD" \
         "$GITLAB_URL/api/v4/projects")
     
-    if echo "$CREATE_RESPONSE" | grep -q "error"; then
-        print_error "Failed to create project: $CREATE_RESPONSE"
+    # Check for errors
+    if echo "$CREATE_RESPONSE" | jq -e '.message' &>/dev/null; then
+        ERROR_MSG=$(echo "$CREATE_RESPONSE" | jq -r '.message')
+        print_error "Failed to create project: $ERROR_MSG"
         exit 1
     fi
     
-    NEW_PROJECT_ID=$(echo "$CREATE_RESPONSE" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+    NEW_PROJECT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
+    NEW_PROJECT_URL=$(echo "$CREATE_RESPONSE" | jq -r '.web_url')
     
-    if [ -z "$NEW_PROJECT_ID" ]; then
+    if [ "$NEW_PROJECT_ID" = "null" ] || [ -z "$NEW_PROJECT_ID" ]; then
         print_error "Could not extract new project ID from response"
         exit 1
     fi
@@ -191,43 +182,12 @@ EOF
     echo "  Name: $new_name"
     echo "  ID: $NEW_PROJECT_ID"
     echo "  Visibility: $new_visibility"
-    echo "  URL: $GITLAB_URL/groups/$(echo $CREATE_RESPONSE | grep -o '"path_with_namespace":"[^"]*"' | cut -d'"' -f4)"
-}
-
-# Interactive mode
-interactive_mode() {
-    echo -e "${BLUE}=== GitLab Project Reset Tool ===${NC}"
-    echo ""
-    
-    read -p "GitLab URL [https://gitlab.com]: " gitlab_url
-    GITLAB_URL="${gitlab_url:-https://gitlab.com}"
-    
-    read -sp "GitLab Personal Access Token: " gitlab_token
-    GITLAB_TOKEN="$gitlab_token"
-    echo ""
-    
-    read -p "Project ID: " project_id
-    PROJECT_ID="$project_id"
-    
-    read -p "New project name (leave blank to keep current): " project_name
-    PROJECT_NAME="$project_name"
-    
-    read -p "Visibility [private/internal/public] (default: private): " visibility
-    PROJECT_VISIBILITY="${visibility:-private}"
+    echo "  URL: $NEW_PROJECT_URL"
 }
 
 # Main execution
 main() {
-    # Show help if requested
-    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-        usage
-    fi
-    
-    # Interactive mode if no arguments
-    if [ -z "$PROJECT_ID" ] && [ -z "$GITLAB_TOKEN" ]; then
-        interactive_mode
-    fi
-    
+    check_jq
     validate_inputs
     get_project_info
     confirm_deletion
