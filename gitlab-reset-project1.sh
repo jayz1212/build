@@ -94,7 +94,7 @@ echo ""
 print_status "Creating new project: $PROJECT_NAME..."
 
 # Recreate project
-PAYLOAD="{\"name\":\"$PROJECT_NAME\",\"visibility\":\"$PROJECT_VISIBILITY\",\"description\":\"$PROJECT_DESC\"}"
+PAYLOAD="{\"name\":\"$PROJECT_NAME\",\"visibility\":\"public\",\"description\":\"$PROJECT_DESC\"}"
 
 CREATE_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
     --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
