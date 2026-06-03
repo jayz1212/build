@@ -62,7 +62,6 @@ PROJECT_DATA=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
 if echo "$PROJECT_DATA" | grep -q '"message"'; then
     print_error "Project not found or access denied"
     echo "Response: $PROJECT_DATA"
-    exit 1
 fi
 
 PROJECT_ID=$(echo "$PROJECT_DATA" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
@@ -72,7 +71,6 @@ PROJECT_DESC=$(echo "$PROJECT_DATA" | grep -o '"description":"[^"]*"' | cut -d'"
 
 if [ -z "$PROJECT_ID" ]; then
     print_error "Could not extract project ID"
-    exit 1
 fi
 
 print_success "Project found: $PROJECT_NAME (ID: $PROJECT_ID)"
@@ -90,7 +88,6 @@ DELETE_BODY=$(echo "$DELETE_RESPONSE" | sed '$d')
 if [[ "$HTTP_CODE" != "202" && "$HTTP_CODE" != "204" ]]; then
     print_error "Failed to delete project (HTTP $HTTP_CODE)"
     echo "Response: $DELETE_BODY"
-    exit 1
 fi
 
 print_success "Project deletion initiated (HTTP $HTTP_CODE)"
@@ -116,7 +113,7 @@ echo ""
 print_status "Creating new project: $PROJECT_NAME..."
 
 # Recreate project
-PAYLOAD="{\"name\":\"$PROJECT_NAME\",\"visibility\":\"$PROJECT_VISIBILITY\",\"description\":\"$PROJECT_DESC\"}"
+PAYLOAD="{\"name\":\"$PROJECT_NAME\",\"visibility\":\"public\",\"description\":\"$PROJECT_DESC\"}"
 
 CREATE_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
     --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
