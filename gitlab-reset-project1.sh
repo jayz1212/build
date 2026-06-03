@@ -72,6 +72,7 @@ PROJECT_DESC=$(echo "$PROJECT_DATA" | grep -o '"description":"[^"]*"' | cut -d'"
 
 if [ -z "$PROJECT_ID" ]; then
     print_error "Could not extract project ID"
+    exit 1
 fi
 
 print_success "Project found: $PROJECT_NAME (ID: $PROJECT_ID)"
@@ -89,12 +90,33 @@ DELETE_BODY=$(echo "$DELETE_RESPONSE" | sed '$d')
 if [[ "$HTTP_CODE" != "202" && "$HTTP_CODE" != "204" ]]; then
     print_error "Failed to delete project (HTTP $HTTP_CODE)"
     echo "Response: $DELETE_BODY"
+    exit 1
+fi
+
+print_success "Project deletion initiated (HTTP $HTTP_CODE)"
+
+# Wait for deletion
+print_status "Waiting for deletion to complete..."
+for i in {1..30}; do
+    sleep 1
+    CHECK=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+        "$GITLAB_API/projects/$PROJECT_ID" 2>/dev/null)
     
+    if echo "$CHECK" | grep -q '"message"'; then
+        print_success "Project deletion confirmed"
+        break
+    fi
+    
+    if [ $i -eq 30 ]; then
+        print_warning "Deletion may still be processing..."
+    fi
+done
+
 echo ""
 print_status "Creating new project: $PROJECT_NAME..."
 
 # Recreate project
-PAYLOAD="{\"name\":\"$PROJECT_NAME\",\"visibility\":\"public\",\"description\":\"$PROJECT_DESC\"}"
+PAYLOAD="{\"name\":\"$PROJECT_NAME\",\"visibility\":\"$PROJECT_VISIBILITY\",\"description\":\"$PROJECT_DESC\"}"
 
 CREATE_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
     --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
@@ -124,26 +146,3 @@ echo "  Visibility: $PROJECT_VISIBILITY"
 echo "  URL: $NEW_PROJECT_URL"
 echo ""
 print_success "Reset completed!"
-    else
-    
-print_success "Project deletion initiated (HTTP $HTTP_CODE)"
-
-# Wait for deletion
-print_status "Waiting for deletion to complete..."
-for i in {1..30}; do
-    sleep 1
-    CHECK=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-        "$GITLAB_API/projects/$PROJECT_ID" 2>/dev/null)
-    
-    if echo "$CHECK" | grep -q '"message"'; then
-        print_success "Project deletion confirmed"
-        break
-    fi
-    
-    if [ $i -eq 30 ]; then
-        print_warning "Deletion may still be processing..."
-    fi
-done
-fi
-
-
