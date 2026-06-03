@@ -72,7 +72,6 @@ PROJECT_DESC=$(echo "$PROJECT_DATA" | grep -o '"description":"[^"]*"' | cut -d'"
 
 if [ -z "$PROJECT_ID" ]; then
     print_error "Could not extract project ID"
-    exit 1
 fi
 
 print_success "Project found: $PROJECT_NAME (ID: $PROJECT_ID)"
