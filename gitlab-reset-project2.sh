@@ -59,58 +59,65 @@ print_status "Fetching project ID..."
 PROJECT_DATA=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
     "$GITLAB_API/projects/$(echo $PROJECT_PATH | sed 's|/|%2F|g')")
 
+PROJECT_EXISTS=true
 if echo "$PROJECT_DATA" | grep -q '"message"'; then
-    print_error "Project not found or access denied"
-    echo "Response: $PROJECT_DATA"
-    exit 1
+    PROJECT_EXISTS=false
 fi
 
-PROJECT_ID=$(echo "$PROJECT_DATA" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
-PROJECT_NAME=$(echo "$PROJECT_DATA" | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4)
-PROJECT_VISIBILITY=$(echo "$PROJECT_DATA" | grep -o '"visibility":"[^"]*"' | cut -d'"' -f4)
-PROJECT_DESC=$(echo "$PROJECT_DATA" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
+if $PROJECT_EXISTS; then
+    PROJECT_ID=$(echo "$PROJECT_DATA" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+    PROJECT_NAME=$(echo "$PROJECT_DATA" | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4)
+    PROJECT_VISIBILITY=$(echo "$PROJECT_DATA" | grep -o '"visibility":"[^"]*"' | cut -d'"' -f4)
+    PROJECT_DESC=$(echo "$PROJECT_DATA" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
 
-if [ -z "$PROJECT_ID" ]; then
-    print_error "Could not extract project ID"
-    exit 1
-fi
-
-print_success "Project found: $PROJECT_NAME (ID: $PROJECT_ID)"
-echo ""
-print_status "Deleting project..."
-
-# Delete project
-DELETE_RESPONSE=$(curl -s -w "\n%{http_code}" -X DELETE \
-    --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-    "$GITLAB_API/projects/$PROJECT_ID")
-
-HTTP_CODE=$(echo "$DELETE_RESPONSE" | tail -n1)
-DELETE_BODY=$(echo "$DELETE_RESPONSE" | sed '$d')
-
-if [[ "$HTTP_CODE" != "202" && "$HTTP_CODE" != "204" ]]; then
-    print_error "Failed to delete project (HTTP $HTTP_CODE)"
-    echo "Response: $DELETE_BODY"
-    exit 1
-fi
-
-print_success "Project deletion initiated (HTTP $HTTP_CODE)"
-
-# Wait for deletion
-print_status "Waiting for deletion to complete..."
-for i in {1..30}; do
-    sleep 1
-    CHECK=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-        "$GITLAB_API/projects/$PROJECT_ID" 2>/dev/null)
-    
-    if echo "$CHECK" | grep -q '"message"'; then
-        print_success "Project deletion confirmed"
-        break
+    if [ -z "$PROJECT_ID" ]; then
+        print_error "Could not extract project ID"
+        exit 1
     fi
-    
-    if [ $i -eq 30 ]; then
-        print_warning "Deletion may still be processing..."
+
+    print_success "Project found: $PROJECT_NAME (ID: $PROJECT_ID)"
+    echo ""
+    print_status "Deleting project..."
+
+    # Delete project
+    DELETE_RESPONSE=$(curl -s -w "\n%{http_code}" -X DELETE \
+        --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+        "$GITLAB_API/projects/$PROJECT_ID")
+
+    HTTP_CODE=$(echo "$DELETE_RESPONSE" | tail -n1)
+    DELETE_BODY=$(echo "$DELETE_RESPONSE" | sed '$d')
+
+    if [[ "$HTTP_CODE" != "202" && "$HTTP_CODE" != "204" ]]; then
+        print_error "Failed to delete project (HTTP $HTTP_CODE)"
+        echo "Response: $DELETE_BODY"
+        exit 1
     fi
-done
+
+    print_success "Project deletion initiated (HTTP $HTTP_CODE)"
+
+    # Wait for deletion
+    print_status "Waiting for deletion to complete..."
+    for i in {1..30}; do
+        sleep 1
+        CHECK=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            "$GITLAB_API/projects/$PROJECT_ID" 2>/dev/null)
+
+        if echo "$CHECK" | grep -q '"message"'; then
+            print_success "Project deletion confirmed"
+            break
+        fi
+
+        if [ $i -eq 30 ]; then
+            print_warning "Deletion may still be processing..."
+        fi
+    done
+else
+    # Project doesn't exist — derive name from the URL path
+    print_warning "Project not found — skipping deletion, will create fresh"
+    PROJECT_NAME=$(basename "$PROJECT_PATH")
+    PROJECT_VISIBILITY="private"
+    PROJECT_DESC=""
+fi
 
 echo ""
 print_status "Creating new project: $PROJECT_NAME..."
