@@ -56,12 +56,16 @@ print_status "Project Path: $PROJECT_PATH"
 print_status "Fetching project ID..."
 
 # Get project ID from path
-PROJECT_DATA=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+PROJECT_RESPONSE=$(curl -s -w "\n%{http_code}" --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
     "$GITLAB_API/projects/$(echo $PROJECT_PATH | sed 's|/|%2F|g')")
 
+PROJECT_HTTP_CODE=$(echo "$PROJECT_RESPONSE" | tail -n1)
+PROJECT_DATA=$(echo "$PROJECT_RESPONSE" | sed '$d')
+
 PROJECT_EXISTS=true
-if echo "$PROJECT_DATA" | grep -q '"message"'; then
+if [[ "$PROJECT_HTTP_CODE" != "200" ]]; then
     PROJECT_EXISTS=false
+    print_warning "Project not found (HTTP $PROJECT_HTTP_CODE) — skipping deletion, will create fresh"
 fi
 
 if $PROJECT_EXISTS; then
@@ -113,7 +117,6 @@ if $PROJECT_EXISTS; then
     done
 else
     # Project doesn't exist — derive name from the URL path
-    print_warning "Project not found — skipping deletion, will create fresh"
     PROJECT_NAME=$(basename "$PROJECT_PATH")
     PROJECT_VISIBILITY="private"
     PROJECT_DESC=""
