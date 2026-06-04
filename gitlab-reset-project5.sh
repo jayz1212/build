@@ -138,9 +138,8 @@ for i in {1..60}; do
         break
     fi
 
-    if [ "$i" -eq 60 ]; then
-        print_error "Timed out waiting for project deletion"
-        exit 1
+    if [ $i -eq 30 ]; then
+        print_warning "Deletion may still be processing..."
     fi
 done
 
