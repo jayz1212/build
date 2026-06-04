@@ -118,7 +118,7 @@ if $PROJECT_EXISTS; then
 else
     # Project doesn't exist — derive name from the URL path
     PROJECT_NAME=$(basename "$PROJECT_PATH")
-    PROJECT_VISIBILITY="private"
+    PROJECT_VISIBILITY="public"
     PROJECT_DESC=""
 fi
 
