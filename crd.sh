@@ -23,7 +23,7 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
 export SELINUX_IGNORE_NEVERALLOWS=true
-export WITH_GMS=true
+export WITH_GMS=false
 export TARGET_PERMISSIVE=true
 source build/envsetup.sh
 lunch lineage_blossom-bp4a-eng
