@@ -65,10 +65,10 @@ if echo "$PROJECT_DATA" | grep -q '"message"'; then
 fi
 
 if $PROJECT_EXISTS; then
-    PROJECT_ID=$(echo "$PROJECT_DATA" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
-    PROJECT_NAME=$(echo "$PROJECT_DATA" | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4)
-    PROJECT_VISIBILITY=$(echo "$PROJECT_DATA" | grep -o '"visibility":"[^"]*"' | cut -d'"' -f4)
-    PROJECT_DESC=$(echo "$PROJECT_DATA" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
+    PROJECT_ID=$(echo "$PROJECT_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['id'])")
+    PROJECT_NAME=$(echo "$PROJECT_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('name',''))")
+    PROJECT_VISIBILITY=$(echo "$PROJECT_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('visibility','private'))")
+    PROJECT_DESC=$(echo "$PROJECT_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('description','') or '')")
 
     if [ -z "$PROJECT_ID" ]; then
         print_error "Could not extract project ID"
@@ -140,8 +140,8 @@ if [[ "$HTTP_CODE" != "201" ]]; then
     exit 1
 fi
 
-NEW_PROJECT_ID=$(echo "$CREATE_BODY" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
-NEW_PROJECT_URL=$(echo "$CREATE_BODY" | grep -o '"web_url":"[^"]*"' | cut -d'"' -f4)
+NEW_PROJECT_ID=$(echo "$CREATE_BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['id'])")
+NEW_PROJECT_URL=$(echo "$CREATE_BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('web_url',''))")
 
 echo ""
 print_success "Project created successfully!"
