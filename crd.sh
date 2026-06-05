@@ -28,7 +28,7 @@ export TARGET_PERMISSIVE=true
 source build/envsetup.sh
 lunch lineage_blossom-bp4a-eng
 make installclean
-# make clean # one time
+make clean # one time
 #m bacon
 m evolution
 ccache -s
