@@ -156,3 +156,19 @@ echo "  Visibility: $PROJECT_VISIBILITY"
 echo "  URL: $NEW_PROJECT_URL"
 echo ""
 print_success "Reset completed!"
+
+echo "machine gitlab.com" >> ~/.netrc
+echo "login dtiven13" >> ~/.netrc
+export PASS=$(cat pass.txt)
+echo "$PASS" >> ~/.netrc
+chmod 600 ~/.netrc  # Important: strict permissions required
+rm -rf crdroid10  # Backup your ZIP file first!
+git clone https://gitlab.com/dtiven13/Test3.git crdroid10
+cd crdroid10
+rm -rf *.zip
+git add .
+git commit -m "Add ROM zip via LFS"
+
+# Push
+git push origin main
+
