@@ -111,7 +111,7 @@ if $PROJECT_EXISTS; then
             break
         fi
 
-        if [ $i -eq 30 ]; then
+        if [ $i -eq 15 ]; then
             print_warning "Deletion may still be processing..."
         fi
     done
