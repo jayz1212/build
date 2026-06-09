@@ -167,7 +167,7 @@ git clone https://gitlab.com/dtiven13/Test3.git crdroid10
 cd crdroid10
 rm -rf *.zip
 git add .
-git commit -m "Add ROM zip via LFS"
+touch a.txt
 sudo apt update
 sudo apt install git-lfs -y
 git lfs install
