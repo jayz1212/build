@@ -1,87 +1,48 @@
-sudo apt update
-sudo apt install patchelf -y
-sudo apt install ccache -y
-mkdir tmp
-export CCACHE_DIR=tmp
-export USE_CCACHE=1
-ccache -s
 rm -rf .repo/local_manifests/
-rm -rf .repo/manifests/
 rm -rf device/xiaomi
-rm -rf device/xiaomi/blossom-kernel
+rm -rf kernel/xiaomi
 rm -rf vendor/xiaomi
-rm -rf vendor/xiaomi/miuicamera
-rm -rf hardware/mediatek
-rm -rf device/mediatek/sepolicy_vndr
-rm -rf TMP_PATCHES
-#repo init -u https://github.com/crdroidandroid/android.git -b 16.0 --depth=1 --git-lfs
-repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --git-lfs
-git clone https://github.com/jayz1212/local --depth 1 -b cd16 .repo/local_manifests
-repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
+rm -rf hardware/xiaomi
+
+
+# Clone DerpFest
+
+repo init -u https://github.com/Evolution-X/manifest -b vic --depth=1 --git-lfs
+#Temp Fix Repo tool
+#cd .repo/repo;git pull -r;cd ../..;
+
+# Clone local_manifests repository
+git clone https://github.com/bagaskara815/local_manifests --depth 1 -b 15.2-old .repo/local_manifests
+if [ ! 0 == 0 ]
+ then   curl -o .repo/local_manifests https://github.com/bagaskara815/local_manifests.git
+ fi
+
+# repo sync
 /opt/crave/resync.sh
-#export TARGET_USES_MINI_GAPPS=true
-#export TARGET_USES_PICO_GAPPS=true
-export TARGET_ENABLE_BLUR=false
-export SELINUX_IGNORE_NEVERALLOWS=true
-export WITH_GMS=false
-export TARGET_PERMISSIVE=true
+grep -q '"com.lazada.android"' frameworks/base/core/java/com/android/internal/util/evolution/PixelPropsUtils.java || \
+sed -i '/"com.android.chrome",/a\        "com.lazada.android",\n        "com.shopee.ph",' frameworks/base/core/java/com/android/internal/util/evolution/PixelPropsUtils.java
+cat frameworks/base/core/java/com/android/internal/util/evolution/PixelPropsUtils.java
+
+# # Set up build environment
+# cd frameworks/base && curl https://gist.githubusercontent.com/bagaskara815/b2abdff48cae8370ca2a0b867d7769e4/raw/fw.patch >> fw.patch && git am fw.patch && rm fw.patch && cd ../../
+# wget https://github.com/bagaskara815/local_manifests/raw/keys/keys.zip && unzip -o keys.zip -d vendor/lineage/signing/ && rm keys.zip
+
+# # disable fsgen
+# cd build/soong && curl https://gist.githubusercontent.com/bagaskara815/2f26516ef378fe8eae9803749e331a09/raw/fsgen.patch >> fsgen.patch && git am fsgen.patch && rm fsgen.patch && cd ../../
+
+# # Nfc Fix
+# cd packages/apps/Nfc && curl https://gist.githubusercontent.com/bagaskara815/e9ad53683e62a66ff0a4ba5d714bed80/raw/nfcfix.patch >> nfcfix.patch && git am nfcfix.patch && rm nfcfix.patch && cd ../../../
+
+# # GMS temp fix
+# cd vendor/google/gms && curl https://gist.githubusercontent.com/bagaskara815/eff6e36fb96db28298d35281eb2b85c4/raw/gms-temp-fix.patch >> gms-temp-fix.patch && git am gms-temp-fix.patch && rm gms-temp-fix.patch && cd ../../../
+
 source build/envsetup.sh
-lunch lineage_blossom-bp4a-eng
+
+# brunch configuration
+lunch lineage_vayu-bp1a-userdebug
+
+# Clean
 make installclean
-#make clean # one time
-#m bacon
+
+# Run
 m evolution
-ccache -s
-#curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/tar.sh | bash
-
-
-
-
-
-
-
-
-echo "machine gitlab.com" >> ~/.netrc
-echo "login dtiven13" >> ~/.netrc
-export PASS=$(cat pass.txt)
-echo "$PASS" >> ~/.netrc
-chmod 600 ~/.netrc  # Important: strict permissions required
-rm -rf crdroid10  # Backup your ZIP file first!
-git clone https://gitlab.com/dtiven13/Test3.git crdroid10
-cd crdroid10
-rm -rf *.zip
-git add .
-git commit -m "Add ROM zip via LFS"
-
-# Push
-git push origin main
-cd -
-
-
-cd crdroid10
-
-# Setup LFS
-sudo apt update
-sudo apt install git-lfs -y
-git lfs install
-git lfs track "*.zip"
-git config --global user.email "you@example.com"
-git config --global user.name "Your Name"
-git add .gitattributes
-git commit -m "Enable LFS"
-git config --global http.version HTTP/1.1
-git config --global http.postBuffer 524288000
-git config --global http.lowSpeedLimit 0
-git config --global http.lowSpeedTime 999999
-git config --global lfs.concurrenttransfers 1
-cd ..
-cp out/target/product/*/recovery.img crdroid10
-cp out/target/product/*/*.zip crdroid10
-
-
-cd crdroid10
-git add .
-git commit -m "Add ROM zip via LFS"
-
-# Push
-git push origin main
