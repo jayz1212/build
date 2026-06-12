@@ -29,8 +29,8 @@ source build/envsetup.sh
 lunch lineage_blossom-bp4a-eng
 make installclean
 #make clean # one time
-#m bacon
-m evolution
+m bacon
+#m evolution
 ccache -s
 #curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/tar.sh | bash
 
