@@ -4,7 +4,6 @@ rm -rf kernel/xiaomi
 rm -rf vendor/xiaomi
 rm -rf hardware/xiaomi
 
-
 # Clone DerpFest
 
 repo init -u https://github.com/Evolution-X/manifest -b vic --depth=1 --git-lfs
@@ -12,10 +11,7 @@ repo init -u https://github.com/Evolution-X/manifest -b vic --depth=1 --git-lfs
 #cd .repo/repo;git pull -r;cd ../..;
 
 # Clone local_manifests repository
-git clone https://github.com/bagaskara815/local_manifests --depth 1 -b 15.2-old .repo/local_manifests
-if [ ! 0 == 0 ]
- then   curl -o .repo/local_manifests https://github.com/bagaskara815/local_manifests.git
- fi
+git clone https://github.com/jayz1212/local_manifests --depth 1 -b evo .repo/local_manifests
 
 # repo sync
 /opt/crave/resync.sh
