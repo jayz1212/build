@@ -25,6 +25,9 @@ export TARGET_ENABLE_BLUR=false
 export SELINUX_IGNORE_NEVERALLOWS=true
 export WITH_GMS=false
 export TARGET_PERMISSIVE=true
+
+sed -i '/<item>com.android.nfc<\/item>/d' frameworks/base/core/res/res/values/policy_exempt_apps.xml
+cat frameworks/base/core/res/res/values/policy_exempt_apps.xml
 source build/envsetup.sh
 lunch lineage_blossom-bp4a-eng
 make installclean
