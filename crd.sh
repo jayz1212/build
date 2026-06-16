@@ -15,7 +15,8 @@ rm -rf hardware/mediatek
 rm -rf device/mediatek/sepolicy_vndr
 rm -rf TMP_PATCHES
 #repo init -u https://github.com/crdroidandroid/android.git -b 16.0 --depth=1 --git-lfs
-repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --depth=1 --git-lfs
+repo init -u https://github.com/Evolution-X/manifest -b bq2 --git-lfs --depth=1
+#repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --depth=1 --git-lfs
 git clone https://github.com/jayz1212/local --depth 1 -b cd16 .repo/local_manifests
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 /opt/crave/resync.sh
@@ -32,7 +33,7 @@ source build/envsetup.sh
 lunch lineage_blossom-bp4a-user
 make installclean
 #make clean # one time
-m bacon
-#m evolution
+#m bacon
+m evolution
 ccache -s
 curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/tar.sh | bash
