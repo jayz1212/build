@@ -21,10 +21,10 @@ git clone https://github.com/jayz1212/local --depth 1 -b cd16 .repo/local_manife
 repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 /opt/crave/resync.sh
 #export TARGET_USES_MINI_GAPPS=true
-#export TARGET_USES_PICO_GAPPS=true
+export TARGET_USES_PICO_GAPPS=true
 export TARGET_ENABLE_BLUR=false
 export SELINUX_IGNORE_NEVERALLOWS=true
-export WITH_GMS=false
+export WITH_GMS=true
 export TARGET_PERMISSIVE=true
 
 #sed -i '/<item>com.android.nfc<\/item>/d' frameworks/base/core/res/res/values/policy_exempt_apps.xml
