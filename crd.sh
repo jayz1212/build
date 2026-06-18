@@ -27,8 +27,13 @@ export SELINUX_IGNORE_NEVERALLOWS=true
 export WITH_GMS=false
 export TARGET_PERMISSIVE=true
 
-sed -i '/<item>com.android.nfc<\/item>/d' frameworks/base/core/res/res/values/policy_exempt_apps.xml
+#sed -i '/<item>com.android.nfc<\/item>/d' frameworks/base/core/res/res/values/policy_exempt_apps.xml
 cat frameworks/base/core/res/res/values/policy_exempt_apps.xml
+git clone https://github.com/Evolution-X/vendor_evolution-priv_keys-template vendor/evolution-priv/keys
+cd vendor/evolution-priv/keys
+chmod +x keys.sh
+./keys.sh
+cd -
 source build/envsetup.sh
 lunch lineage_blossom-bp4a-user
 make installclean
