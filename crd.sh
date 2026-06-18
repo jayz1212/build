@@ -6,7 +6,6 @@ export CCACHE_DIR=tmp
 export USE_CCACHE=1
 ccache -s
 rm -rf .repo/local_manifests/
-rm -rf .repo/manifests/
 rm -rf device/xiaomi
 rm -rf device/xiaomi/blossom-kernel
 rm -rf vendor/xiaomi
