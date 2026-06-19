@@ -12,6 +12,7 @@ rm -rf vendor/xiaomi
 rm -rf vendor/xiaomi/miuicamera
 rm -rf hardware/mediatek
 rm -rf device/mediatek/sepolicy_vndr
+rm -rf frameworks/base
 rm -rf TMP_PATCHES
 #repo init -u https://github.com/crdroidandroid/android.git -b 16.0 --depth=1 --git-lfs
 repo init -u https://github.com/Evolution-X/manifest -b bq2 --git-lfs --depth=1
@@ -25,12 +26,12 @@ export TARGET_ENABLE_BLUR=false
 export SELINUX_IGNORE_NEVERALLOWS=true
 export WITH_GMS=true
 export TARGET_PERMISSIVE=true
-
+sed -i '\|vendor/extras/prebuilt/product/fonts,\$(TARGET_COPY_OUT_PRODUCT)/fonts|d' vendor/extras/evolution.mk
 #sed -i '/<item>com.android.nfc<\/item>/d' frameworks/base/core/res/res/values/policy_exempt_apps.xml
 cat frameworks/base/core/res/res/values/policy_exempt_apps.xml
 source build/envsetup.sh
 lunch lineage_blossom-bp4a-user
-make installclean
+make clean
 #make clean # one time
 #m bacon
 m evolution
