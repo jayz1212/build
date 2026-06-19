@@ -31,7 +31,7 @@ sed -i '\|vendor/extras/prebuilt/product/fonts,\$(TARGET_COPY_OUT_PRODUCT)/fonts
 cat frameworks/base/core/res/res/values/policy_exempt_apps.xml
 source build/envsetup.sh
 lunch lineage_blossom-bp4a-user
-make clean
+make installclean
 #make clean # one time
 #m bacon
 m evolution
