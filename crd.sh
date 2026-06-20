@@ -30,7 +30,7 @@ sed -i '\|vendor/extras/prebuilt/product/fonts,\$(TARGET_COPY_OUT_PRODUCT)/fonts
 #sed -i '/<item>com.android.nfc<\/item>/d' frameworks/base/core/res/res/values/policy_exempt_apps.xml
 cat frameworks/base/core/res/res/values/policy_exempt_apps.xml
 source build/envsetup.sh
-lunch lineage_blossom-bp4a-user
+lunch lineage_blossom-bp4a-eng
 make installclean
 #make clean # one time
 #m bacon
