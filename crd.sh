@@ -36,4 +36,4 @@ make installclean
 #m bacon
 m evolution
 ccache -s
-curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/main/tar.sh | bash
+curl -sf https://raw.githubusercontent.com/xc112lg/scripts/refs/heads/lunaris/tar.sh | bash
