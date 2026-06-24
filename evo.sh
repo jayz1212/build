@@ -41,6 +41,7 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 # export WITH_ADB_INSECURE=true
 # export SELINUX_IGNORE_NEVERALLOWS=true
 # export WITH_GMS=false
+export CLANG_TARGET_ARM32="--target=arm-linux-android"
 source build/envsetup.sh
 #make clean
 
