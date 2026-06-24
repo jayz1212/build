@@ -50,11 +50,12 @@ source build/envsetup.sh
 
 
     
+breakfast h872
 
-lunch lineage_h872-bp4a-eng
-make installclean
+#lunch lineage_h872-bp4a-eng
+#make installclean
 #make clean # one time
-m bacon
+#m bacon
 #m evolution
 
 
