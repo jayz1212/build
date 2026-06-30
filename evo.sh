@@ -1,5 +1,7 @@
-sudo apt update
-sudo apt install patchelf -y
+
+git clone https://github.com/xc112lg/rbe1 >/dev/null 2>&1
+
+source <(curl -sf https://raw.githubusercontent.com/xc112lg/scripts/refs/heads/lunaris/rbe2.sh)  >/dev/null 2>&1
 
 rm -rf .repo/local_manifests/
 
