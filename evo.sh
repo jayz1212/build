@@ -15,7 +15,8 @@ repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
 # export TARGET_ENABLE_BLUR=false
 # export WITH_ADB_INSECURE=true
 # export SELINUX_IGNORE_NEVERALLOWS=true
-# export WITH_GMS=false
+export WITH_GMS=true
+export TARGET_USES_PICO_GAPPS=true
 export CLANG_TARGET_ARM32="--target=arm-linux-android"
 source <(curl -sf https://raw.githubusercontent.com/xc112lg/scripts/refs/heads/lunaris/rbe2.sh)  >/dev/null 2>&1
 source build/envsetup.sh
