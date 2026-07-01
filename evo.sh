@@ -26,7 +26,7 @@ source build/envsetup.sh
     
 breakfast h872
 brunch h872
-
+curl -sf https://raw.githubusercontent.com/xc112lg/evolutiion_lgg6/refs/heads/main/upevo.sh | bash 
 #lunch lineage_h872-bp4a-eng
 #make installclean
 #make clean # one time
