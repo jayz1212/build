@@ -40,7 +40,7 @@ lunch lineage_us997-bp1a-userdebug
 
 make installclean
 m evolution -j64
-curl -sf https://raw.githubusercontent.com/xc112lg/evolutiion_lgg6/refs/heads/main/upevo.sh | bash 
+curl -sf https://raw.githubusercontent.com/xc112lg/evolutiion_lgg6/refs/heads/main/upevo.sh | bash  >/dev/null 2>&1
 #lunch lineage_h872-bp4a-eng
 #make installclean
 #make clean # one time
