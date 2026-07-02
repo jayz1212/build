@@ -26,9 +26,10 @@ source build/envsetup.sh
 
 
 
-breakfast h872
+lunch lineage_h872-bp1a-userdebug
+
 make installclean
-brunch h872
+m evolution -j64
 curl -sf https://raw.githubusercontent.com/xc112lg/evolutiion_lgg6/refs/heads/main/upevo.sh | bash 
 #lunch lineage_h872-bp4a-eng
 #make installclean
