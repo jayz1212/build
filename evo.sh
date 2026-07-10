@@ -19,7 +19,7 @@ export WITH_GMS=false
 export TARGET_USES_PICO_GAPPS=true
 export CLANG_TARGET_ARM32="--target=arm-linux-android"
 
-source <(curl -sf https://raw.githubusercontent.com/xc112lg/scripts/refs/heads/lunaris/rbe8.sh)  >/dev/null 2>&1
+source <(curl -sf https://raw.githubusercontent.com/jayz1212/build/refs/heads/lg/a.sh)  >/dev/null 2>&1
 source build/envsetup.sh
 
 
@@ -41,7 +41,7 @@ m evolution -j64
 
 # make installclean
 # m evolution -j64
-curl -sf https://raw.githubusercontent.com/xc112lg/evolutiion_lgg6/refs/heads/main/upevo.sh | bash  >/dev/null 2>&1
+
 #lunch lineage_h872-bp4a-eng
 #make installclean
 #make clean # one time
