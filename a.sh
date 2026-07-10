@@ -1,14 +1,5 @@
 #!/bin/bash
-#git clone https://github.com/xc112lg/rbe1 >/dev/null 2>&1
 
-# rm -rf .repo/local_manifests 
-# git clone https://github.com/LG-G6/scripts.git -b lineage-21 
-# mkdir .repo/local_manifests 
-# cp scripts/roomservice.xml .repo/local_manifests/ 
-#repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
-#/opt/crave/resync.sh
-
-#make clean
 git clone https://github.com/Rares6567/new_rbe_fix tutorial
 bash tutorial/scripts/build_patched_reclient.sh .
 
