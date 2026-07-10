@@ -8,14 +8,14 @@ rm -rf .repo/local_manifests/
 #repo init -u https://github.com/crdroidandroid/android.git -b 16.0 --depth=1 --git-lfs
 repo init -u https://github.com/Evolution-X/manifest -b bka --git-lfs --depth=1
 # repo init -u https://github.com/Evolution-X/manifest -b vic --git-lfs --depth=1
-# git clone https://github.com/jayz1212/local --depth 1 -b lg .repo/local_manifests
-# repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
-# /opt/crave/resync.sh
+git clone https://github.com/jayz1212/local --depth 1 -b lg .repo/local_manifests
+repo sync -c -j32 --force-sync --no-clone-bundle --no-tags
+/opt/crave/resync.sh
 # export TARGET_USES_PICO_GAPPS=true
 # export TARGET_ENABLE_BLUR=false
 # export WITH_ADB_INSECURE=true
 # export SELINUX_IGNORE_NEVERALLOWS=true
-export WITH_GMS=true
+export WITH_GMS=false
 export TARGET_USES_PICO_GAPPS=true
 export CLANG_TARGET_ARM32="--target=arm-linux-android"
 
