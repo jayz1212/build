@@ -18,6 +18,7 @@ rm -rf .repo/local_manifests/
 export WITH_GMS=true
 export TARGET_USES_PICO_GAPPS=true
 export CLANG_TARGET_ARM32="--target=arm-linux-android"
+
 source <(curl -sf https://raw.githubusercontent.com/xc112lg/scripts/refs/heads/lunaris/rbe8.sh)  >/dev/null 2>&1
 source build/envsetup.sh
 
@@ -31,15 +32,15 @@ lunch lineage_h872-bp1a-userdebug
 make installclean
 m evolution -j64
 
-lunch lineage_h870-bp1a-userdebug
+# lunch lineage_h870-bp1a-userdebug
 
-make installclean
-m evolution -j64
+# make installclean
+# m evolution -j64
 
-lunch lineage_us997-bp1a-userdebug
+# lunch lineage_us997-bp1a-userdebug
 
-make installclean
-m evolution -j64
+# make installclean
+# m evolution -j64
 curl -sf https://raw.githubusercontent.com/xc112lg/evolutiion_lgg6/refs/heads/main/upevo.sh | bash  >/dev/null 2>&1
 #lunch lineage_h872-bp4a-eng
 #make installclean
