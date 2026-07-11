@@ -29,6 +29,7 @@ source build/envsetup.sh
 perl -0777 -pi -e 's/^cc_prebuilt_library_shared \{\n\tname: "libwifi-hal-ctrl",.*?\n\}\n\n?//ms' vendor/lge/msm8996-common/Android.bp
 sed -i '/^vendor\/lib\/libwifi-hal-ctrl\.so|/s/^/-/' device/lge/msm8996-common/proprietary-files.txt
 sed -i '/^vendor\/lib64\/libwifi-hal-ctrl\.so|/s/^/-/' device/lge/msm8996-common/proprietary-files.txt
+sed -i 's/libbinder-v32/libbinder/g; s/libprotobuf-cpp-lite-v29/libprotobuf-cpp-lite/g' vendor/lge/msm8996-common/Android.bp
 #lunch lineage_h872-bp1a-userdebug
 lunch lineage_h872-bp4a-userdebug
 
