@@ -32,7 +32,7 @@ sed -i '/^vendor\/lib64\/libwifi-hal-ctrl\.so|/s/^/-/' device/lge/msm8996-common
 lunch lineage_h872-bp1a-userdebug
 
 make installclean
-m evolution -j64
+m evolution
 
 # lunch lineage_h870-bp1a-userdebug
 
