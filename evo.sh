@@ -26,7 +26,9 @@ source build/envsetup.sh
 
 
 
-
+perl -0777 -pi -e 's/^cc_prebuilt_library_shared \{\n\tname: "libwifi-hal-ctrl",.*?\n\}\n\n?//ms' vendor/lge/msm8996-common/Android.bp
+sed -i '/^vendor\/lib\/libwifi-hal-ctrl\.so|/s/^/-/' device/lge/msm8996-common/proprietary-files.txt
+sed -i '/^vendor\/lib64\/libwifi-hal-ctrl\.so|/s/^/-/' device/lge/msm8996-common/proprietary-files.txt
 lunch lineage_h872-bp1a-userdebug
 
 make installclean
